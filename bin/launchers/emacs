@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Launcher: emacs — open the target (and slice) in Emacs; print the watch + pair commands.
+# Thin and honest: Emacs users run the watcher and AI in vterm/eshell/M-x compile.
+#
+# Receives the launcher contract from bin/workshop via the environment (WORKSHOP_*).
+
+set -euo pipefail
+
+if ! command -v emacs >/dev/null 2>&1; then
+  echo "emacs not on PATH (WORKSHOP_LAUNCHER=emacs)." >&2
+  echo "  or pick another launcher in .workshoprc.local (manual works everywhere)." >&2
+  exit 127
+fi
+
+# shellcheck source=bin/launchers/_steps.sh
+source "$WORKSHOP_ROOT/bin/launchers/_steps.sh"
+
+echo "Opening Emacs on $WORKSHOP_TARGET_DIR (code lives here)."
+if [[ "$WORKSHOP_TARGET_DIR" != "$WORKSHOP_SLICE_DIR" ]]; then
+  echo "The drill (ANATOMY.md) is in $WORKSHOP_SLICE_DIR."
+fi
+echo "Run these in a vterm/eshell (or M-x compile for the watcher):"
+print_workshop_steps
+echo
+
+# Open both dirs; -n returns control to the shell instead of blocking this script.
+if [[ "$WORKSHOP_TARGET_DIR" != "$WORKSHOP_SLICE_DIR" ]]; then
+  exec emacs -n "$WORKSHOP_TARGET_DIR" "$WORKSHOP_SLICE_DIR"
+else
+  exec emacs -n "$WORKSHOP_TARGET_DIR"
+fi

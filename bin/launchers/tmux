@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# Launcher: tmux — nvim left, watcher bottom-left, AI + term windows.
+#
+# Receives the launcher contract from bin/workshop via the environment:
+#   WORKSHOP_ROOT WORKSHOP_SLICE_DIR WORKSHOP_TARGET_DIR
+#   WORKSHOP_EDITOR_CMD WORKSHOP_TERM_CMD WORKSHOP_AI_CMD WORKSHOP_TMUX_LAYOUT
+# It refuses to know how config was layered, the test command, or the drill protocol.
+
+set -euo pipefail
+
+if ! command -v tmux >/dev/null 2>&1; then
+  echo "tmux not installed (WORKSHOP_LAUNCHER=tmux)." >&2
+  echo "  arch: sudo pacman -S tmux   debian: sudo apt install tmux   macos: brew install tmux" >&2
+  echo "  or pick another launcher in .workshoprc.local (manual works everywhere)." >&2
+  exit 127
+fi
+
+SLICE_PATH="$WORKSHOP_SLICE_DIR"
+TARGET_DIR="$WORKSHOP_TARGET_DIR"
+EDITOR_CMD="$WORKSHOP_EDITOR_CMD"
+TERM_CMD="$WORKSHOP_TERM_CMD"
+ai_cmd="$WORKSHOP_AI_CMD"
+
+# Build a tmux-safe session name. basename emits a trailing newline, so feed it
+# through printf before tr (otherwise the newline becomes `_` and trails the name).
+SESSION_NAME_RAW="$(basename "$SLICE_PATH")"
+SESSION="$(printf '%s' "$SESSION_NAME_RAW" | tr -c '[:alnum:]_-' '_')"
+
+# Re-attach if session exists.
+if tmux has-session -t "$SESSION" 2>/dev/null; then
+  exec tmux attach -t "$SESSION"
+fi
+
+case "${WORKSHOP_TMUX_LAYOUT:-default}" in
+  default)
+    # Three windows for laptop screens.
+    #   window 'code': editor top (~70%, or a plain shell if WORKSHOP_EDITOR=""),
+    #                  watcher bottom (~30%) — TDD loop together.
+    #   window 'ai':   AI partner full-screen.
+    #   window 'term': WORKSHOP_TERM_CMD (e.g. container login), else a free shell.
+    # Switch with C-b n / C-b p / C-b 0 / C-b 1 / C-b 2.
+    ai_title="${ai_cmd:-pair}"
+    ai_window="${ai_title%% *}"
+
+    # 'code' window: editor pane opens in the target repo (where the code is);
+    # watcher pane stays in the slice (it sources the per-slice .workshoprc).
+    tmux new-session -d -s "$SESSION" -c "$TARGET_DIR" -n "code"
+    tmux split-window -v -p 30 -t "$SESSION:code.0" -c "$SLICE_PATH"
+    # Only seize pane 0 for an editor if one is configured; otherwise leave a shell.
+    if [[ -n "$EDITOR_CMD" ]]; then
+      tmux send-keys -t "$SESSION:code.0" "$EDITOR_CMD" C-m
+    fi
+    tmux send-keys -t "$SESSION:code.1" "$WORKSHOP_ROOT/bin/watch" C-m
+
+    # 'ai' window: cwd stays the slice so the workshop protocol loads; --add-dir reaches the target.
+    tmux new-window -t "$SESSION" -n "$ai_window" -c "$SLICE_PATH"
+    if [[ -n "$ai_cmd" ]]; then
+      tmux send-keys -t "$SESSION:$ai_window" "$ai_cmd" C-m
+    fi
+
+    tmux new-window -t "$SESSION" -n "term" -c "$TARGET_DIR"
+    # For a dockerized target, WORKSHOP_TERM_CMD logs straight into the container.
+    if [[ -n "$TERM_CMD" ]]; then
+      tmux send-keys -t "$SESSION:term" "$TERM_CMD" C-m
+    fi
+
+    # Start on the code window so the TDD loop is visible immediately.
+    tmux select-window -t "$SESSION:code"
+    ;;
+  *)
+    echo "unknown layout: $WORKSHOP_TMUX_LAYOUT" >&2
+    echo "add a case in bin/launchers/tmux or set WORKSHOP_TMUX_LAYOUT=default" >&2
+    tmux kill-session -t "$SESSION" 2>/dev/null || true
+    exit 2
+    ;;
+esac
+
+exec tmux attach -t "$SESSION"

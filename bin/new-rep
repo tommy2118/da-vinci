@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# Usage: new-rep <name>
+#
+# Scaffolds a new mission directory at <workshop-root>/<name>/.
+# Drops in MISSION.md from the template. Does NOT create a slice yet —
+# drill the mission first (stations 1 & 2), then: bin/new-slice <name> <slice>.
+
+set -euo pipefail
+
+if [[ $# -lt 1 ]]; then
+  echo "usage: new-rep <name>" >&2
+  exit 64
+fi
+
+NAME="$1"
+WORKSHOP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Config layering: committed defaults, then per-machine local, then resolve the content dir.
+# WORKSHOP_CONTENT_DIR is where practice content lives; defaults to the framework root.
+# shellcheck disable=SC1090,SC1091
+[[ -f "$WORKSHOP_ROOT/.workshoprc" ]] && source "$WORKSHOP_ROOT/.workshoprc"
+# shellcheck disable=SC1090,SC1091
+[[ -f "$WORKSHOP_ROOT/.workshoprc.local" ]] && source "$WORKSHOP_ROOT/.workshoprc.local"
+WORKSHOP_CONTENT_DIR="${WORKSHOP_CONTENT_DIR:-$WORKSHOP_ROOT}"
+
+DEST="$WORKSHOP_CONTENT_DIR/$NAME"
+
+if [[ -e "$DEST" ]]; then
+  echo "already exists: $DEST" >&2
+  exit 1
+fi
+
+TMPL="$WORKSHOP_ROOT/templates/mission/MISSION.md.tmpl"
+if [[ ! -f "$TMPL" ]]; then
+  echo "missing template: $TMPL" >&2
+  exit 1
+fi
+
+mkdir -p "$DEST"
+sed "s/{{NAME}}/$NAME/g" "$TMPL" > "$DEST/MISSION.md"
+
+cat <<EOF
+Created $DEST/
+  $DEST/MISSION.md
+
+Next:
+  1. Edit MISSION.md — drill stations 1 (mission statement) and 2 (slice list).
+     See $WORKSHOP_ROOT/ROCK_DRILL_PROTOCOL.md.
+  2. bin/new-slice $NAME <slice-name>   # creates SLICE_01_<slice-name>/
+EOF

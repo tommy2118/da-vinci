@@ -1,0 +1,17 @@
+# frozen_string_literal: true
+
+require_relative "workshop/check_result"
+require_relative "workshop/slice"
+require_relative "workshop/note"
+require_relative "workshop/notes_corpus"
+require_relative "workshop/notes_index"
+require_relative "workshop/mission"
+require_relative "workshop/note_scaffold"
+require_relative "workshop/github"
+require_relative "workshop/rules/acceptance_spec_rule"
+require_relative "workshop/rules/bypass_audit_rule"
+require_relative "workshop/rules/checklist_rule"
+require_relative "workshop/rules/refusal_lists_rule"
+require_relative "workshop/rules/required_files_rule"
+require_relative "workshop/rules/required_sections_rule"
+require_relative "workshop/drill_check"

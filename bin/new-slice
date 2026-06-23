@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# Usage: new-slice <mission-name> [slice-name]
+#
+# Scaffolds the next numbered slice inside an existing mission.
+# Auto-numbers based on the highest SLICE_NN_* directory present.
+# If slice-name is omitted, prompts for it.
+
+set -euo pipefail
+
+if [[ $# -lt 1 ]]; then
+  echo "usage: new-slice <mission-name> [slice-name]" >&2
+  exit 64
+fi
+
+MISSION="$1"
+SLICE_NAME="${2:-}"
+WORKSHOP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Config layering: committed defaults, then per-machine local, then resolve the content dir.
+# Templates come from the framework root; the mission lives under the content dir.
+# shellcheck disable=SC1090,SC1091
+[[ -f "$WORKSHOP_ROOT/.workshoprc" ]] && source "$WORKSHOP_ROOT/.workshoprc"
+# shellcheck disable=SC1090,SC1091
+[[ -f "$WORKSHOP_ROOT/.workshoprc.local" ]] && source "$WORKSHOP_ROOT/.workshoprc.local"
+WORKSHOP_CONTENT_DIR="${WORKSHOP_CONTENT_DIR:-$WORKSHOP_ROOT}"
+
+MISSION_DIR="$WORKSHOP_CONTENT_DIR/$MISSION"
+
+if [[ ! -d "$MISSION_DIR" ]]; then
+  echo "no such mission: $MISSION_DIR" >&2
+  echo "create it with: bin/new-rep $MISSION" >&2
+  exit 1
+fi
+
+if [[ -z "$SLICE_NAME" ]]; then
+  read -rp "slice name (e.g. 'skeleton', 'validate'): " SLICE_NAME
+fi
+
+if [[ -z "$SLICE_NAME" ]]; then
+  echo "slice name required" >&2
+  exit 64
+fi
+
+# Find next slice number by scanning SLICE_NN_* directories.
+LAST_N=$(find "$MISSION_DIR" -maxdepth 1 -type d -name 'SLICE_*' 2>/dev/null \
+  | sed -E 's|.*/SLICE_0*([0-9]+).*|\1|' \
+  | sort -n \
+  | tail -1)
+LAST_N="${LAST_N:-0}"
+NEXT_N=$((LAST_N + 1))
+PADDED=$(printf "%02d" "$NEXT_N")
+
+DEST="$MISSION_DIR/SLICE_${PADDED}_${SLICE_NAME}"
+
+if [[ -e "$DEST" ]]; then
+  echo "already exists: $DEST" >&2
+  exit 1
+fi
+
+ANATOMY_TMPL="$WORKSHOP_ROOT/templates/slice/ANATOMY.md.tmpl"
+RC_TMPL="$WORKSHOP_ROOT/templates/slice/.workshoprc.tmpl"
+SPEC_TMPL="$WORKSHOP_ROOT/templates/slice/spec/acceptance_spec.rb.tmpl"
+
+for t in "$ANATOMY_TMPL" "$RC_TMPL" "$SPEC_TMPL"; do
+  if [[ ! -f "$t" ]]; then
+    echo "missing template: $t" >&2
+    exit 1
+  fi
+done
+
+mkdir -p "$DEST/spec"
+
+sed_subst="s/{{MISSION}}/$MISSION/g; s/{{SLICE}}/$SLICE_NAME/g; s/{{NUM}}/$PADDED/g"
+sed -e "$sed_subst" "$ANATOMY_TMPL" > "$DEST/ANATOMY.md"
+sed -e "$sed_subst" "$SPEC_TMPL" > "$DEST/spec/acceptance_spec.rb"
+cp "$RC_TMPL" "$DEST/.workshoprc"
+
+cat <<EOF
+Created $DEST/
+  $DEST/ANATOMY.md              (drill stations 3-7)
+  $DEST/spec/acceptance_spec.rb (the artifact that ends the drill)
+  $DEST/.workshoprc             (per-slice overrides)
+
+Next:
+  1. Drill stations 3-7 in ANATOMY.md.
+  2. Replace the pending block in spec/acceptance_spec.rb with the real happy-path assertion.
+  3. bin/drill-check $MISSION/SLICE_${PADDED}_${SLICE_NAME}
+  4. bin/workshop $MISSION/SLICE_${PADDED}_${SLICE_NAME}
+EOF

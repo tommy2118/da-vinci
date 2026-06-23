@@ -1,0 +1,48 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative "../lib/workshop"
+require "open3"
+
+if ARGV.empty?
+  warn "usage: bin/drill-check <slice-path>"
+  exit 64
+end
+
+WORKSHOP_ROOT = File.expand_path("..", __dir__)
+
+# Resolve WORKSHOP_CONTENT_DIR through the same config layering the bin/ shell scripts use,
+# so a slice path is found whether content lives here or in a separate personal repo.
+def resolve_content_dir(root)
+  script = <<~SH
+    [ -f "$WS_ROOT/.workshoprc" ] && . "$WS_ROOT/.workshoprc"
+    [ -f "$WS_ROOT/.workshoprc.local" ] && . "$WS_ROOT/.workshoprc.local"
+    printf '%s' "${WORKSHOP_CONTENT_DIR:-$WS_ROOT}"
+  SH
+  out, status = Open3.capture2({ "WS_ROOT" => root }, "bash", "-c", script)
+  status.success? && !out.strip.empty? ? File.expand_path(out.strip) : root
+rescue StandardError
+  root
+end
+
+# Resolve the slice path: as given (absolute or relative to cwd) wins; otherwise try the
+# content dir, then the framework root (so bundled examples/ resolve too).
+def resolve_slice_path(arg)
+  return arg if File.directory?(arg)
+
+  [resolve_content_dir(WORKSHOP_ROOT), WORKSHOP_ROOT].each do |base|
+    candidate = File.join(base, arg)
+    return candidate if File.directory?(candidate)
+  end
+  arg
+end
+
+slice = Workshop::Slice.new(resolve_slice_path(ARGV.fetch(0)))
+results = Workshop::DrillCheck.new.call(slice)
+
+results.each do |result|
+  marker = result.ok? ? "PASS" : "FAIL"
+  puts "#{marker}: #{result.message}"
+end
+
+exit(results.all?(&:ok?) ? 0 : 1)

@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rock Drill Table</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Guided Slice Design Exercise</p>
+          <h1>Rock Drill Table</h1>
+          <p class="hero-copy">
+            Rock Drill Table is the name of this exercise. Use its 7-step
+            design drill to shape a slice before coding. Fill in the behavior,
+            slice order, roles, seams, refusal lists, proof steps, and bypass
+            risks. The page turns that into three copyable artifacts.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <button id="copy-mission" class="action-button">Copy MISSION.md</button>
+          <button id="copy-body-plan" class="action-button">Copy BODY_PLAN.md</button>
+          <button id="copy-acceptance-spec" class="action-button">Copy acceptance spec</button>
+          <button id="copy-bootstrap" class="action-button">Copy WORKSHOP_START.md</button>
+          <button id="download-bundle" class="ghost-button">Download bootstrap bundle</button>
+          <button id="reset-state" class="ghost-button">Reset table</button>
+        </div>
+      </header>
+
+      <section class="bootstrap-banner">
+        <div class="bootstrap-banner-copy">
+          <p class="eyebrow">Persist + Bootstrap</p>
+          <h2>Turn this drill into a real workshop project</h2>
+          <p class="overview-copy">
+            Your draft auto-saves in this browser while you work. When the drill is ready,
+            download the drill JSON, run the bootstrap command, and the workshop can create
+            the mission directory, first slice, and tmux session for you.
+          </p>
+        </div>
+        <div class="bootstrap-banner-meta">
+          <div class="bootstrap-chip">
+            <span class="bootstrap-chip-label">Draft status</span>
+            <strong id="persist-status">Auto-saved in this browser</strong>
+          </div>
+          <div class="bootstrap-chip">
+            <span class="bootstrap-chip-label">Drill JSON</span>
+            <code id="state-export-name">workshop-project-rock-drill.json</code>
+          </div>
+        </div>
+        <div class="bootstrap-command-panel">
+          <span class="bootstrap-chip-label">Bootstrap command</span>
+          <pre id="bootstrap-command" class="preview command-preview">npm run bootstrap -- /path/to/workshop-project-rock-drill.json --launch-tmux</pre>
+          <div class="bootstrap-actions">
+            <button id="download-state" class="action-button">Download drill JSON</button>
+            <button id="copy-bootstrap-command" class="ghost-button">Copy bootstrap command</button>
+            <button id="download-bundle-banner" class="ghost-button">Download starter bundle</button>
+          </div>
+        </div>
+        <div class="bootstrap-steps">
+          <article class="bootstrap-step">
+            <span class="bootstrap-step-index">1</span>
+            <strong>Draft the slice</strong>
+            <span class="microcopy">Everything here is kept in local browser storage while you fill the drill.</span>
+          </article>
+          <article class="bootstrap-step">
+            <span class="bootstrap-step-index">2</span>
+            <strong>Persist the drill</strong>
+            <span class="microcopy">Download the JSON state file so the workshop CLI can consume it later.</span>
+          </article>
+          <article class="bootstrap-step">
+            <span class="bootstrap-step-index">3</span>
+            <strong>Bootstrap the project</strong>
+            <span class="microcopy">Run the command shown here to create dirs, write files, and launch tmux.</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="overview-grid">
+        <article class="overview-card">
+          <p class="eyebrow">Start Here</p>
+          <h2>What this page does</h2>
+          <p class="overview-copy">
+            This is a guided rehearsal before coding. You define the behavior,
+            break it into slices, name the parts of the system, connect them
+            with messages, then turn that drill into exportable project files.
+          </p>
+        </article>
+
+        <article class="overview-card">
+          <p class="eyebrow">Plain-English Glossary</p>
+          <h2>House words translated</h2>
+          <div id="plain-glossary" class="glossary-list"></div>
+        </article>
+
+        <article class="overview-card">
+          <p class="eyebrow">Export Map</p>
+          <h2>What each copy button uses</h2>
+          <div id="export-map" class="export-list"></div>
+        </article>
+      </section>
+
+      <section class="station-rail" id="station-rail"></section>
+
+      <main class="workspace">
+        <section class="control-board">
+          <article class="station-card">
+            <div class="station-head">
+              <span class="station-kicker">Workshop Use</span>
+              <h2>Bootstrap Setup</h2>
+            </div>
+            <p class="station-copy">
+              Set the repo name and acceptance harness before you export. This
+              turns the drill into a concrete starter packet for the next project.
+            </p>
+            <div class="dual-grid">
+              <label>
+                Project name
+                <input id="project-name" type="text" placeholder="Voucher Redemption" />
+              </label>
+              <label>
+                Repo slug
+                <input id="project-slug" type="text" placeholder="voucher-redemption" />
+              </label>
+            </div>
+            <div class="dual-grid">
+              <label>
+                Workshop acceptance file
+                <select id="acceptance-style">
+                  <option value="rspec">Workshop / RSpec</option>
+                </select>
+              </label>
+              <label>
+                Bootstrap notes
+                <textarea
+                  id="bootstrap-notes"
+                  rows="3"
+                  placeholder="Any repo-specific rule, stack note, or constraint the team should carry into day 1."
+                ></textarea>
+              </label>
+            </div>
+          </article>
+
+          <article class="station-card" data-station="1">
+            <div class="station-head">
+              <span class="station-kicker">Station 1</span>
+              <h2>Mission</h2>
+            </div>
+            <p class="station-copy">
+              One sentence, behavior in -> behavior out. Name the level of work
+              before you reach for implementation.
+            </p>
+            <div class="dual-grid">
+              <label>
+                Mission name
+                <input id="mission-name" type="text" placeholder="inventory_sync" />
+              </label>
+              <label>
+                Work level
+                <select id="work-level">
+                  <option value="problem">problem</option>
+                  <option value="initiative">initiative</option>
+                  <option value="epic">epic</option>
+                  <option value="task">task</option>
+                </select>
+              </label>
+            </div>
+            <label>
+              Mission statement
+              <textarea
+                id="mission-statement"
+                rows="3"
+                placeholder="POST /cart/:id/redeem with {code} -> 200 {result: :applied}."
+              ></textarea>
+            </label>
+            <div class="dual-grid">
+              <label>
+                Slice number
+                <input id="slice-number" type="text" placeholder="01" />
+              </label>
+              <label>
+                Slice name
+                <input id="slice-name" type="text" placeholder="walking skeleton" />
+              </label>
+            </div>
+            <label>
+              Scope reminder
+              <textarea
+                id="scope-reminder"
+                rows="2"
+                placeholder="Hard-coded happy path through every layer; prove wiring, not policy."
+              ></textarea>
+            </label>
+          </article>
+
+          <article class="station-card" data-station="2">
+            <div class="station-head">
+              <span class="station-kicker">Station 2</span>
+              <h2>Slices</h2>
+            </div>
+            <p class="station-copy">
+              This is the shipping order, not the idea list. Every slice names
+              the risk it retires and the end-to-end proof it keeps green.
+            </p>
+            <div id="slice-list" class="stack"></div>
+            <button class="small-button" data-action="add-slice">Add slice</button>
+          </article>
+
+          <article class="station-card wide-card" data-station="3">
+            <div class="station-head">
+              <span class="station-kicker">Station 3</span>
+              <h2>Draw</h2>
+            </div>
+            <p class="station-copy">
+              Use the training symbols to name the parts of the system. Roles are not free
+              prose; they are explicit artifact parts with plain meanings.
+            </p>
+            <div id="entity-list" class="stack"></div>
+            <button class="small-button" data-action="add-entity">Add role</button>
+            <div class="preview-panel">
+              <div class="subhead">
+                <h3>Live notation</h3>
+                <span class="microcopy">Generated from the role and seam grammar</span>
+              </div>
+              <pre id="diagram-preview" class="preview"></pre>
+            </div>
+          </article>
+
+          <article class="station-card wide-card" data-station="4">
+            <div class="station-head">
+              <span class="station-kicker">Station 4</span>
+              <h2>Joints</h2>
+            </div>
+            <p class="station-copy">
+              Each message names the seam, the operator, the real default, and
+              the test double. If a seam is vague here, it will be vague in the
+              code.
+            </p>
+            <div id="message-list" class="stack"></div>
+            <button class="small-button" data-action="add-message">Add message</button>
+          </article>
+
+          <article class="station-card wide-card" data-station="5">
+            <div class="station-head">
+              <span class="station-kicker">Station 5</span>
+              <h2>Refusal Lists</h2>
+            </div>
+            <p class="station-copy">
+              Refusal bullets defend the design. Write what each role does not
+              know, not how it secretly works.
+            </p>
+            <div id="refusal-list" class="stack"></div>
+            <button class="small-button" data-action="add-refusal">Add role list</button>
+          </article>
+
+          <article class="station-card wide-card" data-station="6">
+            <div class="station-head">
+              <span class="station-kicker">Station 6</span>
+              <h2>Walk</h2>
+            </div>
+            <p class="station-copy">
+              Proof steps should read like executable traces. Prefix them with
+              role symbols so the acceptance test has a visible source.
+            </p>
+            <div class="walk-grid">
+              <div>
+                <div class="subhead">
+                  <h3>Happy path</h3>
+                  <button class="small-button" data-action="add-happy-step">Add step</button>
+                </div>
+                <div id="happy-path-list" class="stack"></div>
+              </div>
+              <div>
+                <div class="subhead">
+                  <h3>Failure path</h3>
+                  <button class="small-button" data-action="add-failure-step">Add step</button>
+                </div>
+                <div id="failure-path-list" class="stack"></div>
+              </div>
+            </div>
+            <label>
+              Acceptance spec title
+              <input id="acceptance-title" type="text" placeholder="applies voucher end to end through real wiring" />
+            </label>
+            <label>
+              Acceptance assertion snippet
+              <textarea
+                id="acceptance-assertion"
+                rows="6"
+                class="code-box"
+                placeholder="expect(response).to have_http_status(:ok)"
+              ></textarea>
+            </label>
+            <div class="example-callout">
+              <strong>Example</strong>
+              <pre class="preview">expect(response).to have_http_status(:ok)
+expect(json_body).to eq("result" => "applied")</pre>
+            </div>
+          </article>
+
+          <article class="station-card wide-card" data-station="7">
+            <div class="station-head">
+              <span class="station-kicker">Station 7</span>
+              <h2>Bypass Audit</h2>
+            </div>
+            <p class="station-copy">
+              Name the likely ways someone could bypass the design later.
+              Record the timer honestly; the drill is only useful if the
+              rehearsal is real.
+            </p>
+            <div id="risks-list" class="stack"></div>
+            <button class="small-button" data-action="add-risk">Add risk</button>
+            <label class="checkbox-row">
+              <input id="timer-checked" type="checkbox" />
+              Timer stayed under about 30 minutes
+            </label>
+          </article>
+        </section>
+
+        <aside class="command-deck">
+          <section class="deck-panel readiness-panel">
+            <div class="panel-head">
+              <p class="eyebrow">Live Progress</p>
+              <h2 id="readiness-label">0%</h2>
+            </div>
+            <div class="meter">
+              <div id="readiness-fill" class="meter-fill"></div>
+            </div>
+            <p id="readiness-copy" class="deck-copy"></p>
+          </section>
+
+          <section class="deck-panel">
+            <div class="panel-head">
+              <p class="eyebrow">Role Symbols</p>
+              <h2>How to read the notation</h2>
+            </div>
+            <pre id="symbol-legend" class="preview"></pre>
+          </section>
+
+          <section class="deck-panel">
+            <div class="panel-head">
+              <p class="eyebrow">Step-By-Step Coach</p>
+              <h2>What to think about at each station</h2>
+            </div>
+            <div id="coach-prompts" class="coach-stack"></div>
+          </section>
+
+          <section class="deck-panel">
+            <div class="panel-head">
+              <p class="eyebrow">Live Checks</p>
+              <h2>What is still incomplete?</h2>
+            </div>
+            <div id="checklist" class="checklist"></div>
+          </section>
+
+          <section class="deck-panel">
+            <div class="panel-head">
+              <p class="eyebrow">Mission Export</p>
+              <h2><code>MISSION.md</code></h2>
+            </div>
+            <pre id="mission-preview" class="preview"></pre>
+          </section>
+
+          <section class="deck-panel">
+            <div class="panel-head">
+              <p class="eyebrow">Body Plan Export</p>
+              <h2><code>BODY_PLAN.md</code></h2>
+            </div>
+            <pre id="body-plan-preview" class="preview tall-preview"></pre>
+          </section>
+
+          <section class="deck-panel">
+            <div class="panel-head">
+              <p class="eyebrow">Acceptance Export</p>
+              <h2><code id="acceptance-artifact-name">spec/acceptance/01-walking-skeleton_spec.rb</code></h2>
+            </div>
+            <pre id="acceptance-preview" class="preview"></pre>
+          </section>
+
+          <section class="deck-panel">
+            <div class="panel-head">
+              <p class="eyebrow">Workshop Export</p>
+              <h2><code>WORKSHOP_START.md</code></h2>
+            </div>
+            <pre id="bootstrap-preview" class="preview tall-preview"></pre>
+          </section>
+
+          <section class="deck-panel">
+            <div class="panel-head">
+              <p class="eyebrow">Starter Bundle</p>
+              <h2>Files To Create</h2>
+            </div>
+            <pre id="bundle-preview" class="preview"></pre>
+          </section>
+        </aside>
+      </main>
+    </div>
+
+    <script type="module" src="./app.mjs"></script>
+  </body>
+</html>

@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Launcher: vscode — open the slice + target in VS Code and wire up the watcher.
+# The `cursor` launcher delegates here with EDITOR_BIN=cursor (same CLI + tasks format).
+#
+# Receives the launcher contract from bin/workshop via the environment (WORKSHOP_*).
+# Writes a watch task ONLY into the workshop-owned slice dir (.vscode/ is gitignored
+# there) — it never writes into your target repo.
+
+set -euo pipefail
+
+EDITOR_BIN="${EDITOR_BIN:-code}"
+
+if ! command -v "$EDITOR_BIN" >/dev/null 2>&1; then
+  echo "$EDITOR_BIN not on PATH (WORKSHOP_LAUNCHER=${WORKSHOP_LAUNCHER:-vscode})." >&2
+  echo "  In VS Code/Cursor: run 'Shell Command: Install \"$EDITOR_BIN\" command in PATH'." >&2
+  echo "  or pick another launcher in .workshoprc.local (manual works everywhere)." >&2
+  exit 127
+fi
+
+# shellcheck source=bin/launchers/_steps.sh
+source "$WORKSHOP_ROOT/bin/launchers/_steps.sh"
+
+# Auto-start the watcher via a folderOpen task — but only if the slice path has no
+# characters that would break the JSON we emit (paths with " or \ are rejected; the
+# printed steps below still cover that case).
+if [[ "$WORKSHOP_SLICE_DIR" != *'"'* && "$WORKSHOP_SLICE_DIR" != *'\'* && \
+      "$WORKSHOP_ROOT" != *'"'* && "$WORKSHOP_ROOT" != *'\'* ]]; then
+  mkdir -p "$WORKSHOP_SLICE_DIR/.vscode"
+  cat > "$WORKSHOP_SLICE_DIR/.vscode/tasks.json" <<JSON
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "workshop: watch",
+      "type": "shell",
+      "command": "$WORKSHOP_ROOT/bin/watch",
+      "options": { "cwd": "$WORKSHOP_SLICE_DIR" },
+      "presentation": { "panel": "dedicated", "reveal": "always", "focus": false },
+      "runOptions": { "runOn": "folderOpen" },
+      "problemMatcher": []
+    }
+  ]
+}
+JSON
+  echo "Wrote $WORKSHOP_SLICE_DIR/.vscode/tasks.json (auto-runs the watcher on folder open)."
+fi
+
+# Open the target repo (code lives there); add the slice as a second workspace folder so
+# its watch task and ANATOMY.md are present. For a kata the two are the same folder.
+"$EDITOR_BIN" "$WORKSHOP_TARGET_DIR"
+if [[ "$WORKSHOP_TARGET_DIR" != "$WORKSHOP_SLICE_DIR" ]]; then
+  "$EDITOR_BIN" --add "$WORKSHOP_SLICE_DIR"
+fi
+
+echo
+echo "Opened $EDITOR_BIN. If the watcher didn't auto-start (workspace trust), run it by hand:"
+print_workshop_steps

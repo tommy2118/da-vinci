@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../visual-rockdrill" && pwd)"
+PORT="${PORT:-4174}"
+
+echo "Rock drill visual tool: http://127.0.0.1:${PORT}"
+exec python3 -m http.server "${PORT}" --directory "$ROOT"

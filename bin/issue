@@ -1,0 +1,299 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+#
+# usage: bin/issue <show|epic|mission|slice|board|pr> ... [--repo R --project P]
+#
+# The github-project shape's CLI: read issue/epic context, scaffold a mission from an epic
+# or a slice from a task issue, and drive the Projects v2 board / open PRs. Everything that
+# touches GitHub routes through Workshop::Github (Cli is the only thing that shells to `gh`).
+# Outward writes (board, pr) are dry-run unless --yes is passed — confirm before writing.
+
+require_relative "../lib/workshop"
+require "optparse"
+require "open3"
+
+WORKSHOP_ROOT = File.expand_path("..", __dir__)
+
+# Practice content (missions, notes) may live in a separate repo. Resolve WORKSHOP_CONTENT_DIR
+# through the same config layering the bin/ shell scripts use (.workshoprc then
+# .workshoprc.local), so this CLI scaffolds into the content dir, not the framework root.
+def resolve_content_dir(root)
+  script = <<~SH
+    [ -f "$WS_ROOT/.workshoprc" ] && . "$WS_ROOT/.workshoprc"
+    [ -f "$WS_ROOT/.workshoprc.local" ] && . "$WS_ROOT/.workshoprc.local"
+    printf '%s' "${WORKSHOP_CONTENT_DIR:-$WS_ROOT}"
+  SH
+  out, status = Open3.capture2({ "WS_ROOT" => root }, "bash", "-c", script)
+  status.success? && !out.strip.empty? ? File.expand_path(out.strip) : root
+rescue StandardError
+  root
+end
+
+WORKSHOP_CONTENT_DIR = resolve_content_dir(WORKSHOP_ROOT)
+
+def main(argv)
+  command = argv.shift
+  opts = parse_options(argv)
+  case command
+  when "show"    then cmd_show(argv, opts)
+  when "epic"    then cmd_epic(argv, opts)
+  when "mission" then cmd_mission(argv, opts)
+  when "slice"   then cmd_slice(argv, opts)
+  when "create"  then cmd_create(argv, opts)
+  when "board"   then cmd_board(argv, opts)
+  when "pr"      then cmd_pr(argv, opts)
+  else
+    warn "usage: bin/issue <show|epic|mission|slice|create|board|pr> ..."
+    exit 64
+  end
+end
+
+def parse_options(argv)
+  opts = {}
+  OptionParser.new do |o|
+    o.on("--repo R") { |v| opts[:repo] = v }
+    o.on("--project P") { |v| opts[:project] = v }
+    o.on("--target T") { |v| opts[:target] = v }
+    o.on("--name N") { |v| opts[:name] = v }
+    o.on("--base B") { |v| opts[:base] = v }
+    o.on("--head H") { |v| opts[:head] = v }
+    o.on("--title T") { |v| opts[:title] = v }
+    o.on("--body B") { |v| opts[:body] = v }
+    o.on("--label L") { |v| (opts[:labels] ||= []) << v }
+    o.on("--status S") { |v| opts[:status] = v }
+    o.on("--no-board") { opts[:board] = false }
+    o.on("--yes") { opts[:yes] = true }
+  end.parse!(argv)
+  opts
+end
+
+# --- commands ---------------------------------------------------------------
+
+def cmd_show(argv, opts)
+  number = argv.shift or abort "usage: bin/issue show <n>"
+  print_issue(gateway(opts).issue(number))
+end
+
+def cmd_epic(argv, opts)
+  number = argv.shift or abort "usage: bin/issue epic <n>"
+  gw = gateway(opts)
+  print_issue(gw.issue(number))
+  tasks = gw.tasks_for(number)
+  puts "\nTasks referencing this epic:"
+  if tasks.empty?
+    puts "  (none found by code reference)"
+  else
+    tasks.each { |t| puts "  ##{t.number}  #{t.title}  [#{t.phase}/#{t.priority}]" }
+  end
+end
+
+def cmd_mission(argv, opts)
+  epic_n = argv.shift or abort "usage: bin/issue mission <epic-n> [name]"
+  repo = resolve_repo(opts)
+  project = resolve_project(opts)
+  gw = Workshop::Github::Gateway.new(repo: repo, project: project)
+  epic = gw.issue(epic_n)
+  name = argv.shift || opts[:name] || slugify(strip_code(epic.title))
+  run_bin("new-rep", name)
+  fill_mission_md(name, epic, repo, project, opts[:target], gw.tasks_for(epic_n))
+  puts "Scaffolded mission '#{name}' from epic ##{epic.number}."
+  puts "Next: drill stations 1–2 in #{name}/MISSION.md, then: bin/issue slice #{name} <task-n>"
+end
+
+def cmd_slice(argv, opts)
+  mission = argv.shift
+  task_n = argv.shift
+  abort "usage: bin/issue slice <mission> <task-n>" unless mission && task_n
+  use_mission(mission)
+  gw = Workshop::Github::Gateway.new(repo: resolve_repo(opts), project: resolve_project(opts))
+  issue = gw.issue(task_n)
+  slice_name = opts[:name] || slugify(strip_code(issue.title))
+  dir = create_slice(mission, slice_name)
+  append_line(File.join(dir, ".workshoprc"), %(WORKSHOP_GH_ISSUE="#{task_n}"   # #{issue.title}))
+  inject_issue_context(dir, issue)
+  puts "Scaffolded #{rel(dir)} from task ##{task_n}."
+  puts "Issue context dropped into ANATOMY.md scratch. Next: drill stations 3–7."
+end
+
+def cmd_create(argv, opts)
+  title = argv.shift or abort %(usage: bin/issue create "<title>" [--body B --label L … --status S --no-board --yes])
+  repo = resolve_repo(opts)
+  project = resolve_project(opts)
+  labels = opts[:labels] || []
+  on_board = project && opts[:board] != false
+  unless opts[:yes]
+    puts "[dry-run] would create issue on #{repo}: #{title.inspect}"
+    puts "  labels: #{labels.join(', ')}" unless labels.empty?
+    puts "  board: project #{project}#{opts[:status] ? " → #{opts[:status]}" : ''}" if on_board
+    puts "re-run with --yes to create."
+    return
+  end
+  gw = Workshop::Github::Gateway.new(repo: repo, project: project)
+  result = gw.create_issue(title: title, body: opts[:body], labels: labels)
+  puts "Created ##{result[:number]}  #{result[:url]}"
+  return unless on_board
+
+  gw.add_to_board(result[:url], status: opts[:status])
+  puts "Added to project #{project}#{opts[:status] ? " (#{opts[:status]})" : ''}"
+end
+
+def cmd_board(argv, opts)
+  number = argv.shift
+  status = argv.shift
+  abort "usage: bin/issue board <n> <status> [--yes]" unless number && status
+  project = resolve_project(opts) or abort "no project — set WORKSHOP_GH_PROJECT or pass --project"
+  unless opts[:yes]
+    puts "[dry-run] would move issue ##{number} → '#{status}' on project #{project}"
+    puts "re-run with --yes to write to GitHub."
+    return
+  end
+  gateway(opts).set_status(number, status)
+  puts "Moved ##{number} → #{status}."
+end
+
+def cmd_pr(argv, opts)
+  number = argv.shift or abort "usage: bin/issue pr <n> [--base B --head H --title T --yes]"
+  repo = resolve_repo(opts)
+  base = opts[:base] || "master"
+  head = opts[:head] or abort "pass --head <branch> (the target repo's current branch)"
+  gw = Workshop::Github::Gateway.new(repo: repo, project: resolve_project(opts))
+  unless opts[:yes]
+    puts "[dry-run] would open PR on #{repo}: base #{base} ← head #{head}, closing ##{number}"
+    puts "re-run with --yes to create the PR."
+    return
+  end
+  puts "Opened #{gw.open_pr(number, base: base, head: head, title: opts[:title])}"
+  move_to_review(gw, number) if resolve_project(opts)
+end
+
+# --- rendering --------------------------------------------------------------
+
+def print_issue(issue)
+  puts "##{issue.number}  #{issue.title}  [#{issue.state}]"
+  facets = { "type" => issue.kind, "priority" => issue.priority, "phase" => issue.phase }
+              .filter_map { |k, v| "#{k}:#{v}" if v }
+  puts "  #{facets.join('  ')}" unless facets.empty?
+  puts "  #{issue.url}" if issue.url
+  puts "\n#{issue.body}" unless issue.body.empty?
+end
+
+# --- scaffolding edits ------------------------------------------------------
+
+def fill_mission_md(name, epic, repo, project, target, tasks)
+  path = File.join(WORKSHOP_CONTENT_DIR, name, "MISSION.md")
+  body = File.read(path)
+  body = body.sub(/<!-- github-project shape only.*?-->\n/m, "") # drop the template's commented example
+  body = body.sub(/^\*\*Target repo:\*\*.*$/, fields_block(repo, project, target, epic))
+  body = body.sub(/^## Rules for this mission$/, "#{candidates_block(epic, tasks)}\n## Rules for this mission")
+  File.write(path, body)
+end
+
+def fields_block(repo, project, target, epic)
+  [
+    "**Target repo:** `#{target || '~/src/REPLACE_ME'}`",
+    "**Epic:** `##{epic.number}`",
+    "**GH repo:** `#{repo}`",
+    project ? "**GH project:** `#{project}`" : "**GH project:** _(set the Projects v2 number)_"
+  ].join("\n")
+end
+
+def candidates_block(epic, tasks)
+  lines = ["### GitHub tasks (candidates — drill them into slices yourself)\n"]
+  lines << "From epic ##{epic.number} (#{epic.epic_code}). These are starting points, not a slice plan;"
+  lines << "the slice list above is yours to drill (no drilling ahead).\n"
+  if tasks.empty?
+    lines << "- _(no task issues reference this epic's code yet)_\n"
+  else
+    tasks.each { |t| lines << "- ##{t.number} #{t.title} `[#{t.phase}/#{t.priority}]`" }
+    lines << ""
+  end
+  lines.join("\n")
+end
+
+def create_slice(mission, slice_name)
+  out = run_bin("new-slice", mission, slice_name)
+  out[/Created (\S+?)\/?$/, 1] or abort "could not find created slice path in:\n#{out}"
+end
+
+def inject_issue_context(dir, issue)
+  anatomy = File.join(dir, "ANATOMY.md")
+  context = <<~MD
+
+    ### From task ##{issue.number}: #{issue.title}
+    <#{issue.url}>
+
+    #{issue.body.empty? ? '_(issue has no body)_' : issue.body}
+  MD
+  append_line(anatomy, context)
+end
+
+# --- resolution + shelling --------------------------------------------------
+
+def gateway(opts)
+  Workshop::Github::Gateway.new(repo: resolve_repo(opts), project: resolve_project(opts))
+end
+
+def resolve_repo(opts)
+  opts[:repo] || ENV["WORKSHOP_GH_REPO"] || infer_mission&.gh_repo ||
+    abort("no repo — pass --repo, set WORKSHOP_GH_REPO, or run inside a mission with a `GH repo:` line")
+end
+
+def resolve_project(opts)
+  opts[:project] || ENV["WORKSHOP_GH_PROJECT"] || infer_mission&.gh_project
+end
+
+# Pin the active mission by name (used by commands that name the mission explicitly),
+# so repo/project resolve from its MISSION.md regardless of cwd.
+def use_mission(name)
+  @mission = Workshop::Mission.find(WORKSHOP_CONTENT_DIR, name) or
+    abort "no such mission: #{name} (create it with: bin/issue mission <epic-n> #{name})"
+end
+
+def infer_mission
+  return @mission if defined?(@mission)
+
+  dir = Dir.pwd
+  while dir.start_with?(WORKSHOP_CONTENT_DIR) && dir != File.dirname(dir)
+    md = File.join(dir, "MISSION.md")
+    return @mission = Workshop::Mission.new(name: File.basename(dir), source: File.read(md)) if File.exist?(md)
+
+    dir = File.dirname(dir)
+  end
+  @mission = nil
+end
+
+def move_to_review(gateway, number)
+  gateway.set_status(number, "In Review")
+  puts "Moved ##{number} → In Review."
+rescue Workshop::Github::Error => e
+  warn "PR opened, but board move skipped: #{e.message}"
+end
+
+def run_bin(*args)
+  out, err, status = Open3.capture3(File.join(WORKSHOP_ROOT, "bin", args.first), *args.drop(1))
+  abort "bin/#{args.first} failed: #{err}" unless status.success?
+
+  out
+end
+
+def append_line(path, text)
+  File.open(path, "a") { |f| f.puts(text) }
+end
+
+def strip_code(title)
+  title.sub(/\AE\d+\s+/, "").sub(/\A(PROVE|SPIKE)\b[^:]*:\s*/i, "")
+end
+
+# Whole-word slug, capped near 40 chars (no mid-word truncation).
+def slugify(text)
+  text.downcase.gsub(/[^a-z0-9]+/, " ").split.each_with_object(+"") do |word, slug|
+    break slug if !slug.empty? && slug.length + 1 + word.length > 40
+
+    slug << "-" unless slug.empty?
+    slug << word
+  end
+end
+
+def rel(path) = path.delete_prefix("#{WORKSHOP_CONTENT_DIR}/")
+
+main(ARGV)

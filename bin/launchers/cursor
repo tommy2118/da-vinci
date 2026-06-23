@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Launcher: cursor — Cursor shares VS Code's CLI and tasks.json format, so delegate.
+set -euo pipefail
+EDITOR_BIN=cursor exec "$(dirname "${BASH_SOURCE[0]}")/vscode"

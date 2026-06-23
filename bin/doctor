@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# Usage: doctor
+#
+# Checks the workshop's dependencies and your current config, with OS-aware install hints.
+# Reports what's required (Ruby, entr) vs optional (gh, your launcher's editor). Exit 1 if a
+# required tool is missing.
+
+set -uo pipefail
+
+WORKSHOP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# shellcheck disable=SC1090,SC1091
+[[ -f "$WORKSHOP_ROOT/.workshoprc" ]] && source "$WORKSHOP_ROOT/.workshoprc"
+# shellcheck disable=SC1090,SC1091
+[[ -f "$WORKSHOP_ROOT/.workshoprc.local" ]] && source "$WORKSHOP_ROOT/.workshoprc.local"
+WORKSHOP_CONTENT_DIR="${WORKSHOP_CONTENT_DIR:-$WORKSHOP_ROOT}"
+LAUNCHER="${WORKSHOP_LAUNCHER:-manual}"
+
+OS="$(uname -s)"
+missing_required=0
+
+# Print an OS-appropriate install hint for a package.
+hint() {
+  local pkg="$1"
+  case "$OS" in
+    Darwin) echo "      install: brew install $pkg" ;;
+    *)      echo "      install: sudo apt install $pkg   (or: sudo pacman -S $pkg)" ;;
+  esac
+}
+
+check() { # check <name> <required|optional> <command> [hint-pkg]
+  local name="$1" level="$2" cmd="$3" pkg="${4:-}"
+  if command -v "$cmd" >/dev/null 2>&1; then
+    printf '  ok    %-22s %s\n' "$name" "$(command -v "$cmd")"
+  elif [[ "$level" == required ]]; then
+    printf '  MISS  %-22s (required)\n' "$name"
+    [[ -n "$pkg" ]] && hint "$pkg"
+    missing_required=1
+  else
+    printf '  --    %-22s (optional, not installed)\n' "$name"
+    [[ -n "$pkg" ]] && hint "$pkg"
+  fi
+}
+
+echo "Workshop doctor — $OS"
+echo
+echo "Config:"
+echo "  WORKSHOP_ROOT         $WORKSHOP_ROOT"
+echo "  WORKSHOP_CONTENT_DIR  $WORKSHOP_CONTENT_DIR"
+echo "  WORKSHOP_LAUNCHER     $LAUNCHER"
+echo
+
+echo "Required:"
+check "Ruby"  required ruby
+check "entr (watcher)" required entr entr
+echo
+
+echo "Launcher ($LAUNCHER):"
+case "$LAUNCHER" in
+  tmux)   check "tmux"   required tmux   tmux ;;
+  vscode) check "code"   required code ;;
+  cursor) check "cursor" required cursor ;;
+  emacs)  check "emacs"  required emacs  emacs ;;
+  manual) echo "  ok    manual                 (no editor dependency)" ;;
+  *)      echo "  MISS  $LAUNCHER (no such launcher under bin/launchers/)"; missing_required=1 ;;
+esac
+echo
+
+echo "Optional:"
+check "gh (GitHub missions)" optional gh
+if command -v gh >/dev/null 2>&1; then
+  if gh auth status >/dev/null 2>&1; then
+    echo "        gh is authenticated"
+  else
+    echo "        gh not authenticated — run: gh auth login   (and: gh auth refresh -s project)"
+  fi
+fi
+echo
+
+if [[ "$missing_required" -eq 1 ]]; then
+  echo "Some required tools are missing (see above)."
+  echo "Tip: WORKSHOP_LAUNCHER=manual needs no editor and works everywhere."
+  exit 1
+fi
+echo "All required tools present."

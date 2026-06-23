@@ -1,0 +1,22 @@
+# Per-machine workshop config. Copy to .workshoprc.local (which is gitignored) and edit.
+# Sourced after the committed .workshoprc, so anything here overrides the shared defaults.
+# This is the right place for settings that differ per person or per machine — never commit
+# them to .workshoprc.
+
+# --- Launcher: how `bin/workshop <slice>` arranges your workspace ---
+# manual (default) | tmux | vscode | cursor | emacs
+# export WORKSHOP_LAUNCHER=tmux
+
+# --- Content directory: where your missions and notes live ---
+# Defaults to the framework root (everything in one checkout). Point it at a separate
+# personal repo to keep your practice content out of a shared framework clone. Export it so
+# the Ruby tools (bin/note) see it too. Use $HOME, never a hardcoded /home/<you>.
+# export WORKSHOP_CONTENT_DIR="$HOME/src/workshop-personal"
+
+# --- Editor for the tmux launcher's code pane (ignored by GUI launchers) ---
+# Defaults to "$EDITOR ." when $EDITOR is set, else a plain shell. Override if you want a
+# specific TUI editor regardless of $EDITOR.
+# export WORKSHOP_EDITOR="nvim ."
+
+# --- AI pair command (launched in the AI pane/terminal) ---
+# export WORKSHOP_AI_CMD="claude"

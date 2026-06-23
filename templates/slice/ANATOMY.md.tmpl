@@ -1,0 +1,103 @@
+# Slice {{NUM}} — {{SLICE}}
+
+> **Scope**: [one sentence — what this slice adds beyond the previous one, and what it deliberately does NOT include.]
+
+Mission: `{{MISSION}}` · Drilled via [rock drill](../../ROCK_DRILL_PROTOCOL.md) stations 3-7.
+
+---
+
+## Collaborators
+
+> **How to think**: Start at the caller. What enters the system, what receives it, what message travels where? Follow the messages outward until you hit a leaf. Each box gets a role symbol; each arrow names a message and its return shape.
+>
+> **Heuristic**: *Can I draw it?* If you can, the anatomy is visible. If arrows go everywhere, it's tangled. If one box owns every arrow, you found a god object. Cap at ~5-7 boxes — more and the slice is too big.
+>
+> **Watch for**: arrows you can't name, boxes you can't justify, vendor SDKs sitting next to your own objects (wrap them — §1).
+
+```
+[ASCII anatomy. Boxes, arrows, message names, return shapes. One screen.]
+```
+
+**Legend**: `[C]` caller · `[O]` core object · `[P]` port · `[A]` adapter · `[V]` value · `[R]` result · `->` owned call · `=>` cross-seam handoff · `~>` publication
+
+## Joints
+
+> **How to think**: A joint is any place substitution matters — the seams between owned objects, and the boundary where you wrap external types. For each arrow ask: *what would I have to replace to test this in isolation?*
+>
+> **Heuristic**: Real > Fake > Stub > Mock (§5). Owned > External (§1). Every collaborator should have a real default in the constructor (§4). If a test would need `allow_any_instance_of` or `stub_const`, the joint should have been injected.
+>
+> **Watch for**: arrows whose test double is "I'll just mock the class directly" — that's a missing injection. Time, randomness, env, logger, jobs are joints too (§6) — not language features.
+
+| Arrow | Real default | Test double |
+|-------|--------------|-------------|
+| `...` | ... | ... |
+
+Notes per arrow (where they need it):
+- `Arrow1`: ...
+
+## Refusals
+
+> **How to think**: For each box, ask *what would surprise me if this object knew?* That's the refusal. Refusal is design. An object with no refusal list is not designed yet — it's only named.
+>
+> **Heuristic**: 2-4 refusals per box. Bullets phrased "Does NOT know X" — the negative framing is doctrinal. Each bullet should describe responsibility owned by *another* object in your diagram, or out of scope entirely.
+>
+> **Watch for**: refusals that describe implementation details ("doesn't use a Hash"). Those are cellular, not anatomical. Refusals are about what the object's role excludes.
+
+### `ObjectA`
+- Does NOT know ...
+- Does NOT know ...
+
+### `ObjectB`
+- Does NOT know ...
+- Does NOT know ...
+
+## Walk-through
+
+> **How to think**: Trace the happy path out loud, one message per step. Each step uses only the boxes and arrows from `Collaborators`. If a step needs something you didn't draw, *you found a missing collaborator* — go back and add it before continuing.
+>
+> **Heuristic**: Each numbered step = one message send. Use exact names from the diagram. Mark each step with `?` to denote "the acceptance test will prove this step."
+>
+> **Watch for**: steps that mention concepts not in the diagram. The walk is the design diagnosing itself — listen to it.
+
+### Happy path
+1. ? ...
+2. ? ...
+
+### Failure path
+1. ? ...
+2. ? ...
+
+## Bypass risks
+
+> **How to think**: Where could a future change route around this design? Where might a tired dev "just reach in"? The catastrophic failure mode isn't "we forgot the pattern" — it's "we followed the pattern in one place and bypassed it somewhere else." The anatomy growing a second nervous system.
+>
+> **Heuristic**: Minimum 3 named risks, each with a mitigation. Mitigations come in flavors: *enforcement* (a cop), *structure* (a value object that can't be misused), *convention* (helper method, acceptance test pattern), or *accepted* ("live with it, monitor"). An empty audit is dishonest.
+>
+> **Watch for**: vague mitigations ("be careful"). Risks that don't describe *bypassing* — those are general project risks. This section is specifically about second paths around the design.
+
+| Risk | Likelihood | Mitigation |
+|------|-----------|------------|
+| ... | high/med/low | ... |
+
+---
+
+## Verification checklist
+
+> *Drill instrument — fold mentally once green. The rest of this document is the artifact a reader picks up cold; this section is for the drill operator.*
+
+- [ ] One-screen test — anatomy diagram fits one terminal screen
+- [ ] One-sentence test — scope reminder is one sentence
+- [ ] Refusal-list completeness — every box ≥2 items
+- [ ] Joint completeness — every arrow has real default + test double
+- [ ] Walk test — every walk step references only objects/messages in the drawing
+- [ ] Red-shape test — acceptance test fails on assertions, not plumbing
+- [ ] Bypass-audit honesty — ≥3 named risks with mitigations
+- [ ] Timer test — drill stayed under ~30 minutes
+
+When all eight pass, write the acceptance test stub; that ends the drill.
+
+---
+
+## Scratch (live notes during the slice)
+
+<!-- Append "we are here" notes here when pausing mid-slice. -->

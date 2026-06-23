@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Launcher: manual — print the commands to run by hand. Works in ANY editor, no deps.
+# This is the default and the universal baseline every other launcher falls back to.
+#
+# Receives the launcher contract from bin/workshop via the environment (WORKSHOP_*).
+
+set -euo pipefail
+
+# shellcheck source=bin/launchers/_steps.sh
+source "$WORKSHOP_ROOT/bin/launchers/_steps.sh"
+
+echo "Workshop slice ready: $WORKSHOP_SLICE_DIR"
+echo
+echo "  Editor:              open \"$WORKSHOP_TARGET_DIR\" in your editor (code lives here)"
+if [[ "$WORKSHOP_TARGET_DIR" != "$WORKSHOP_SLICE_DIR" ]]; then
+  echo "                       also add \"$WORKSHOP_SLICE_DIR\" for the drill (ANATOMY.md)"
+fi
+print_workshop_steps
+echo
+echo "Run the watcher and AI in separate terminals. Set WORKSHOP_LAUNCHER in"
+echo ".workshoprc.local to have tmux/VS Code/Cursor/Emacs wire this up for you."

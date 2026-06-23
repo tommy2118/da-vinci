@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# Usage: watch [from any slice directory]
+#
+# File watcher that re-runs the slice's test command on save.
+# Configurable via .workshoprc (global + per-slice).
+
+set -euo pipefail
+
+WORKSHOP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# shellcheck disable=SC1090,SC1091
+[[ -f "$WORKSHOP_ROOT/.workshoprc" ]] && source "$WORKSHOP_ROOT/.workshoprc"
+# shellcheck disable=SC1090,SC1091
+[[ -f "$WORKSHOP_ROOT/.workshoprc.local" ]] && source "$WORKSHOP_ROOT/.workshoprc.local"
+# shellcheck disable=SC1091
+[[ -f .workshoprc ]] && source .workshoprc
+
+WATCH_GLOB="${WORKSHOP_WATCH_GLOB:-lib spec}"
+TEST_CMD="${WORKSHOP_TEST_CMD:-bin/rspec}"
+
+if ! command -v entr >/dev/null 2>&1; then
+  cat >&2 <<EOF
+entr not installed.
+  arch:    sudo pacman -S entr
+  debian:  sudo apt install entr
+  macos:   brew install entr
+EOF
+  exit 127
+fi
+
+# Build a find expression for the configured watch dirs.
+# Only dirs that exist are passed to find, so a missing 'app/' in early reps
+# doesn't break the watcher.
+existing_dirs=()
+for d in $WATCH_GLOB; do
+  [[ -d "$d" ]] && existing_dirs+=("$d")
+done
+
+if [[ ${#existing_dirs[@]} -eq 0 ]]; then
+  echo "no watchable dirs found (looked for: $WATCH_GLOB)" >&2
+  echo "edit WORKSHOP_WATCH_GLOB in .workshoprc, or create one of those dirs" >&2
+  exit 1
+fi
+
+echo "watching: ${existing_dirs[*]}"
+echo "command:  $TEST_CMD"
+echo
+
+# If the first word of TEST_CMD isn't resolvable, wait quietly for it to appear
+# instead of letting entr spin and dump noisy errors.
+# Hint shape depends on whether it's a path-like or a bare command name.
+test_bin="${TEST_CMD%% *}"
+if ! command -v "$test_bin" >/dev/null 2>&1; then
+  echo "test command not yet available: '$test_bin' (full cmd: $TEST_CMD)" >&2
+  if [[ "$test_bin" == */* ]]; then
+    echo "  hint: '$test_bin' is a path — it must exist relative to $(pwd)." >&2
+    echo "        likely the project isn't scaffolded yet. for a Rails slice:" >&2
+    echo "          rails new . --api --minimal -T  # if not yet a Rails app" >&2
+    echo "          rails g rspec:install            # creates bin/rspec" >&2
+  else
+    echo "  hint: '$test_bin' is a bare command — must be on PATH." >&2
+    echo "        likely fixes: eval \"\$(mise activate bash)\" to activate mise," >&2
+    echo "                      or install the gem/tool that provides it." >&2
+  fi
+  echo "  override: set WORKSHOP_TEST_CMD in .workshoprc." >&2
+  echo "waiting for '$test_bin' ..." >&2
+  while ! command -v "$test_bin" >/dev/null 2>&1; do
+    sleep 2
+  done
+  echo "'$test_bin' is now available; starting watcher." >&2
+fi
+
+# entr exits when the watched tree changes (-d); re-scan and continue.
+# If no files match yet, wait for one to appear before invoking entr (avoids tight-loop).
+while true; do
+  files=$(find "${existing_dirs[@]}" -type f \( -name '*.rb' -o -name '*.ru' \) 2>/dev/null)
+  if [[ -z "$files" ]]; then
+    echo "waiting for *.rb files in: ${existing_dirs[*]} ..." >&2
+    while [[ -z "$files" ]]; do
+      sleep 2
+      files=$(find "${existing_dirs[@]}" -type f \( -name '*.rb' -o -name '*.ru' \) 2>/dev/null)
+    done
+  fi
+  echo "$files" | entr -d -cc bash -c "$TEST_CMD" || true
+done

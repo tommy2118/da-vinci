@@ -1,0 +1,3 @@
+# External-target fixture for AcceptanceSpecRule.
+WORKSHOP_MODE=true-pair
+WORKSHOP_TARGET_REPO="$HOME/src/example-target"

@@ -1,0 +1,34 @@
+# Per-slice config. Sourced last — after the global .workshoprc and .workshoprc.local at
+# the workshop root. Override only what's different from the global defaults.
+#
+# Available variables (see global .workshoprc for documentation):
+#   WORKSHOP_MODE           navigator | coach | ping-pong | constraint | true-pair
+#   WORKSHOP_LAUNCHER       manual | tmux | vscode | cursor | emacs
+#   WORKSHOP_TEST_CMD       e.g. "bundle exec rspec" or "bundle exec rspec spec/features"
+#   WORKSHOP_WATCH_GLOB     dirs to watch (space-separated)
+#   WORKSHOP_TMUX_LAYOUT    tmux launcher layout name (currently only 'default')
+#   WORKSHOP_PROJECT_TYPE   matches a directory under templates/
+#   WORKSHOP_EDITOR         tmux launcher's TUI editor command ("" = plain shell)
+#   WORKSHOP_TERM_CMD       command run in the 'term' window ("" = plain shell)
+#   WORKSHOP_TARGET_REPO    external-target: abs path where code lands (opens editor/term there)
+
+# WORKSHOP_MODE=coach
+# WORKSHOP_TEST_CMD="bundle exec rspec spec/features"
+# WORKSHOP_WATCH_GLOB="lib spec config app"
+
+# External-target slice (implementation lives in another repo — see
+# PAIRING_PROTOCOL.md → External-target missions). Point the runner at the target;
+# no runner code changes needed. WATCH_GLOB takes absolute paths. If the target runs
+# its specs in Docker, the test command execs into the container, and the 'term'
+# window logs in via the target's make task.
+# Use $HOME (never a hardcoded /home/<you> or /Users/<you>) so the config works across machines.
+# WORKSHOP_MODE=true-pair
+# WORKSHOP_TARGET_REPO="$HOME/src/my-target-repo"
+# WORKSHOP_TEST_CMD="cd $HOME/src/my-target-repo && docker compose run --rm web bin/rspec spec/requests/some_spec.rb"
+# WORKSHOP_WATCH_GLOB="$HOME/src/my-target-repo/app $HOME/src/my-target-repo/spec"
+# WORKSHOP_TERM_CMD="cd $HOME/src/my-target-repo && make login"
+
+# github-project shape: this slice implements a GitHub Task issue (see GITHUB_PROJECT_SHAPE.md).
+# bin/issue slice sets WORKSHOP_GH_ISSUE; repo/project come from the mission's MISSION.md.
+# The `issue`, `board`, and `pr` signals act on this issue.
+# WORKSHOP_GH_ISSUE="12"

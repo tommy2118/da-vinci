@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+# Usage: workshop <slice-path>
+#
+# Resolves a slice + its layered config, then hands off to a launcher that arranges
+# your workspace. The launcher is chosen by WORKSHOP_LAUNCHER (default: manual):
+#
+#   manual  print the three commands to run by hand — works in ANY editor (the default)
+#   tmux    nvim + watcher + AI in a 3-pane tmux session
+#   vscode  open the folder(s) in VS Code; wire a watch task; print the pair commands
+#   cursor  same as vscode, using the `cursor` binary
+#   emacs   open the folder(s) in Emacs; print the watch + pair commands
+#
+# Set your preference per-machine in .workshoprc.local (see .workshoprc.local.example).
+# Launchers live in bin/launchers/; add one by dropping a script there.
+
+set -euo pipefail
+
+if [[ $# -lt 1 ]]; then
+  echo "usage: workshop <slice-path>" >&2
+  exit 64
+fi
+
+WORKSHOP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Config layering, part 1: committed defaults, then per-machine local.
+# shellcheck disable=SC1090,SC1091
+[[ -f "$WORKSHOP_ROOT/.workshoprc" ]] && source "$WORKSHOP_ROOT/.workshoprc"
+# shellcheck disable=SC1090,SC1091
+[[ -f "$WORKSHOP_ROOT/.workshoprc.local" ]] && source "$WORKSHOP_ROOT/.workshoprc.local"
+WORKSHOP_CONTENT_DIR="${WORKSHOP_CONTENT_DIR:-$WORKSHOP_ROOT}"
+
+# Resolve the slice path. Absolute wins; otherwise try the content dir (where your
+# practice content lives), then the framework root (so bundled examples/ still launch).
+SLICE_PATH="$1"
+if [[ "$SLICE_PATH" != /* ]]; then
+  if [[ -d "$WORKSHOP_CONTENT_DIR/$SLICE_PATH" ]]; then
+    SLICE_PATH="$WORKSHOP_CONTENT_DIR/$SLICE_PATH"
+  else
+    SLICE_PATH="$WORKSHOP_ROOT/$SLICE_PATH"
+  fi
+fi
+
+if [[ ! -d "$SLICE_PATH" ]]; then
+  echo "no such slice: $SLICE_PATH" >&2
+  exit 1
+fi
+
+cd "$SLICE_PATH"
+
+# Config layering, part 2: per-slice overrides (sourced from the slice cwd).
+# shellcheck disable=SC1091
+[[ -f .workshoprc ]] && source .workshoprc
+
+# Resolve the launcher contract — the values every launcher receives, however it arranges
+# them. Use ${VAR-default} (not :-) so an explicit empty override means "none" (e.g.
+# WORKSHOP_EDITOR="" → a plain shell instead of seizing a pane for a TUI editor).
+#   WORKSHOP_SLICE_DIR   the slice itself; cwd for the watcher + AI so per-slice config and
+#                        the workshop CLAUDE.md protocol load.
+#   WORKSHOP_TARGET_DIR  where the code lives — the target repo for external missions, else
+#                        the slice (self-contained kata). Editor + term open here.
+#   WORKSHOP_EDITOR_CMD  TUI editor command for pane launchers (empty = plain shell).
+#   WORKSHOP_TERM_CMD    command for the term window (empty = plain shell).
+#   WORKSHOP_AI_CMD      AI pair command, with --add-dir granted to the target repo so a
+#                        claude pane can edit there too.
+WORKSHOP_SLICE_DIR="$SLICE_PATH"
+WORKSHOP_TARGET_DIR="${WORKSHOP_TARGET_REPO:-$SLICE_PATH}"
+WORKSHOP_EDITOR_CMD="${WORKSHOP_EDITOR-}"
+WORKSHOP_TERM_CMD="${WORKSHOP_TERM_CMD-}"
+
+ai_cmd="${WORKSHOP_AI_CMD-}"
+if [[ -n "${WORKSHOP_TARGET_REPO:-}" && "$ai_cmd" == claude* ]]; then
+  ai_cmd="$ai_cmd --add-dir $WORKSHOP_TARGET_REPO"
+fi
+WORKSHOP_AI_CMD="$ai_cmd"
+
+export WORKSHOP_ROOT WORKSHOP_SLICE_DIR WORKSHOP_TARGET_DIR \
+  WORKSHOP_EDITOR_CMD WORKSHOP_TERM_CMD WORKSHOP_AI_CMD WORKSHOP_TMUX_LAYOUT
+
+LAUNCHER="${WORKSHOP_LAUNCHER:-manual}"
+LAUNCHER_BIN="$WORKSHOP_ROOT/bin/launchers/$LAUNCHER"
+if [[ ! -x "$LAUNCHER_BIN" ]]; then
+  echo "unknown launcher: $LAUNCHER" >&2
+  echo "available:" >&2
+  for l in "$WORKSHOP_ROOT"/bin/launchers/*; do
+    name="$(basename "$l")"
+    [[ "$name" == _* ]] && continue
+    echo "  $name" >&2
+  done
+  echo "set WORKSHOP_LAUNCHER in .workshoprc.local" >&2
+  exit 2
+fi
+
+exec "$LAUNCHER_BIN"

@@ -1,0 +1,168 @@
+{
+  "projectName": "Conway's Game of Life",
+  "projectSlug": "conway-game-of-life",
+  "acceptanceStyle": "rspec",
+  "bootstrapNotes": "Pure functional core. No I/O in the core; rendering and timing live behind ports. Ruby + RSpec.",
+  "missionName": "tick_generation",
+  "workLevel": "task",
+  "missionStatement": "Given a Grid of live cells -> return the next Grid by applying Conway's birth/survival rules.",
+  "sliceNumber": "01",
+  "sliceName": "walking skeleton",
+  "scopeReminder": "Advance one generation for a small hard-coded blinker; prove the rule pipeline is wired end to end.",
+  "slices": [
+    {
+      "name": "walking skeleton: blinker tick",
+      "risk": "Risk that the rule pipeline (count neighbours -> apply rules -> emit grid) is not wired end to end.",
+      "proof": "RSpec: a vertical blinker becomes a horizontal blinker after one tick."
+    },
+    {
+      "name": "rule engine handles all 4 cases",
+      "risk": "Risk that under-population, survival, over-population, and birth are not all covered.",
+      "proof": "RSpec table-driven specs for each rule cover all neighbour counts 0..8 for live and dead cells."
+    },
+    {
+      "name": "bounded vs. toroidal grid topology",
+      "risk": "Risk that the neighbour query leaks topology assumptions into the rule engine.",
+      "proof": "RSpec: swap a BoundedGrid for a ToroidalGrid behind the same port and acceptance still passes."
+    }
+  ],
+  "nextEntityId": 7,
+  "entities": [
+    {
+      "id": "entity-1",
+      "term": "caller",
+      "name": "TickRequester",
+      "responsibility": "Entry point: hands a Grid in, receives NextGrid out."
+    },
+    {
+      "id": "entity-2",
+      "term": "owned",
+      "name": "GameOfLife",
+      "responsibility": "Applies Conway's rules via the neighbour port."
+    },
+    {
+      "id": "entity-3",
+      "term": "port",
+      "name": "NeighbourQuery",
+      "responsibility": "Counts live neighbours of cell (x,y) in a Grid."
+    },
+    {
+      "id": "entity-4",
+      "term": "adapter",
+      "name": "BoundedGridAdapter",
+      "responsibility": "NeighbourQuery for a finite grid; off-grid = dead."
+    },
+    {
+      "id": "entity-5",
+      "term": "value",
+      "name": "Grid",
+      "responsibility": "Immutable live-cell set with width and height."
+    },
+    {
+      "id": "entity-6",
+      "term": "result",
+      "name": "NextGrid",
+      "responsibility": "Grid emitted by one tick; same shape, one gen forward."
+    }
+  ],
+  "messages": [
+    {
+      "fromId": "entity-1",
+      "kind": "call",
+      "toId": "entity-2",
+      "verb": "tick",
+      "args": "grid:",
+      "returnShape": "[R] NextGrid",
+      "owned": "yes",
+      "realDefault": "GameOfLife.new",
+      "testDouble": "FakeGameOfLife",
+      "notes": "Pure function: same input grid always yields same next grid; no side effects."
+    },
+    {
+      "fromId": "entity-2",
+      "kind": "call",
+      "toId": "entity-3",
+      "verb": "count_live_neighbours",
+      "args": "x:, y:",
+      "returnShape": "Integer",
+      "owned": "dependency",
+      "realDefault": "BoundedGridAdapter.new",
+      "testDouble": "FakeNeighbourQuery",
+      "notes": "Returns count in 0..8; never raises for in-bounds or out-of-bounds coords (out-of-bounds counted as dead)."
+    }
+  ],
+  "refusals": [
+    {
+      "entityId": "entity-2",
+      "items": [
+        "Does NOT know how cells are stored (array, set, sparse map).",
+        "Does NOT know the grid topology (bounded, toroidal, infinite)."
+      ]
+    },
+    {
+      "entityId": "entity-4",
+      "items": [
+        "Does NOT know Conway's birth/survival rules.",
+        "Does NOT mutate or own the Grid; it only answers neighbour counts."
+      ]
+    },
+    {
+      "entityId": "entity-1",
+      "items": [
+        "Does NOT know Conway's rules or how to count neighbours.",
+        "Does NOT mutate the Grid; it only hands a Grid in and receives [R] NextGrid."
+      ]
+    },
+    {
+      "entityId": "entity-3",
+      "items": [
+        "Does NOT know Conway's birth/survival rules.",
+        "Does NOT decide a cell's next state; it only answers a count."
+      ]
+    },
+    {
+      "entityId": "entity-5",
+      "items": [
+        "Does NOT know Conway's rules; it just holds live-cell coordinates and dimensions.",
+        "Does NOT mutate; any change returns a new Grid."
+      ]
+    },
+    {
+      "entityId": "entity-6",
+      "items": [
+        "Does NOT know how it was computed; it only carries the resulting Grid state.",
+        "Does NOT know about rendering or display; it is a pure data value."
+      ]
+    }
+  ],
+  "happyPath": [
+    "? [C] TickRequester hands a blinker Grid (3 vertical live cells) to [O] GameOfLife.",
+    "? [O] GameOfLife asks [P] NeighbourQuery for live-neighbour counts of every relevant cell.",
+    "? [A] BoundedGridAdapter answers each count using the real Grid; off-grid cells contribute 0.",
+    "? [O] GameOfLife emits [R] NextGrid containing the horizontal blinker (3 horizontal live cells)."
+  ],
+  "failurePath": [
+    "? [C] TickRequester hands a Grid with width=0 or height=0 to [O] GameOfLife.",
+    "? [O] GameOfLife raises ArgumentError('grid must have positive dimensions'); no [P] NeighbourQuery call is made."
+  ],
+  "acceptanceTitle": "tick advances a vertical blinker to a horizontal blinker through real wiring",
+  "acceptanceAssertion": "expect(game.tick(grid: vertical_blinker)).to eq(horizontal_blinker)",
+  "risks": [
+    {
+      "risk": "Caller skips [O] GameOfLife and mutates Grid directly to 'fix a bug'.",
+      "likelihood": "medium",
+      "mitigation": "Make Grid an immutable frozen value object; expose only Grid.with(live_cells:)."
+    },
+    {
+      "risk": "[O] GameOfLife inlines neighbour counting instead of going through [P] NeighbourQuery, leaking bounded-grid assumptions.",
+      "likelihood": "high",
+      "mitigation": "Acceptance test swaps in a ToroidalGridAdapter and asserts a glider wraps; failure proves the seam is honest."
+    },
+    {
+      "risk": "Rendering / IO sneaks into [O] GameOfLife (printing the grid each tick) and pins it to a console.",
+      "likelihood": "low",
+      "mitigation": "Keep [O] GameOfLife pure: it returns [R] NextGrid; rendering lives in a separate Caller-side renderer."
+    }
+  ],
+  "timerChecked": true
+}

@@ -1,0 +1,76 @@
+# Global workshop defaults (committed). Sourced first by the bin/ scripts, then
+# .workshoprc.local (per-machine, gitignored), then any per-slice .workshoprc — each layer
+# overrides the previous. Keep machine-specific values (launcher, content dir, editor) in
+# .workshoprc.local, not here.
+
+# Active pairing mode. See PAIRING_PROTOCOL.md for definitions.
+#   navigator | coach | ping-pong | constraint | true-pair
+WORKSHOP_MODE=navigator
+
+# Where bin/workshop hands off to arrange your workspace. Launchers live in bin/launchers/.
+#   manual  print the commands to run by hand — works in ANY editor, no deps (default)
+#   tmux    nvim + watcher + AI in a 3-pane tmux session
+#   vscode  open the folder(s) in VS Code and wire up the watch task
+#   cursor  same, using the `cursor` binary
+#   emacs   open the folder(s) in Emacs; print the watch + pair commands
+# Set your preference per-machine in .workshoprc.local (it's gitignored), not here.
+# Conditional so an exported env var or a one-off `WORKSHOP_LAUNCHER=tmux bin/workshop` wins;
+# .workshoprc.local and per-slice .workshoprc (sourced later) still override.
+WORKSHOP_LAUNCHER="${WORKSHOP_LAUNCHER:-manual}"
+
+# Where practice content (missions, notes) lives. Defaults to the framework root, which is
+# correct when you keep everything in one checkout. Point it at a separate personal repo to
+# keep your content out of a shared framework clone. Export it (in .workshoprc.local or your
+# shell profile) so the Ruby tools (bin/note) see it too.
+#   export WORKSHOP_CONTENT_DIR="$HOME/src/workshop-personal"
+WORKSHOP_CONTENT_DIR="${WORKSHOP_CONTENT_DIR:-}"
+
+# Test command invoked by the watcher on file change.
+# Defaults to Rails' bin/rspec stub (faster than bundle exec; uses bootsnap).
+# Override to `bundle exec rspec` for plain Ruby projects, or to anything else.
+WORKSHOP_TEST_CMD="bin/rspec"
+
+# Directories to watch (space-separated). The watcher recurses for *.rb and *.ru.
+WORKSHOP_WATCH_GLOB="lib spec config app"
+
+# Tmux layout used by the tmux launcher (bin/launchers/tmux). Only 'default' is implemented
+# (editor left, watcher bottom-left, AI + term windows).
+WORKSHOP_TMUX_LAYOUT=default
+
+# Project type, used by bin/new-slice if it needs to scaffold.
+# Templates live in templates/<type>/. Unset = no scaffolding.
+WORKSHOP_PROJECT_TYPE=
+
+# External-target mission: absolute path to the repo where code lands (set per-slice).
+# When set, the launcher opens the editor + term on that repo and gives a claude AI pane
+# --add-dir to it, while the watcher + AI keep the slice as cwd. Empty = self-contained
+# kata (everything stays in the slice). Use $HOME, never a hardcoded home, so the same
+# config works across machines. See PAIRING_PROTOCOL.md.
+WORKSHOP_TARGET_REPO=""
+
+# github-project shape: the unit of work lives in GitHub Issues + a Projects v2 board.
+# Epic issue ↔ mission, Task issue ↔ slice. bin/issue reads these (flags > env > the
+# mission's MISSION.md fields). Empty = not a github-project mission. See
+# GITHUB_PROJECT_SHAPE.md.
+#   WORKSHOP_GH_REPO     owner/name slug, e.g. your-org/your-repo
+#   WORKSHOP_GH_PROJECT  Projects v2 number, e.g. 4
+#   WORKSHOP_GH_ISSUE    the Task issue this slice implements (set per-slice)
+WORKSHOP_GH_REPO=""
+WORKSHOP_GH_PROJECT=""
+
+# TUI editor command for the tmux launcher's 'code' pane. Honors your $EDITOR; empty when
+# $EDITOR is unset, which leaves a plain shell (handy when you edit on the host in a GUI
+# editor and don't want a TUI editor seized into a pane). Set it explicitly in
+# .workshoprc.local (e.g. WORKSHOP_EDITOR="nvim .") to override. Ignored by the GUI
+# launchers (vscode/cursor/emacs), which open their own editor. The outer ${VAR-...} keeps
+# an env override (including an explicit empty value) ahead of the $EDITOR-derived default.
+WORKSHOP_EDITOR="${WORKSHOP_EDITOR-${EDITOR:+$EDITOR .}}"
+
+# Command for the 'term' window. Empty = plain shell. For an external-target mission
+# whose target runs in Docker, set this per-slice to log into the container, e.g.
+# WORKSHOP_TERM_CMD="cd \$HOME/src/my-target-repo && make login".
+WORKSHOP_TERM_CMD=""
+
+# AI pair partner command, launched in the right column on boot.
+# Set empty to leave the pane idle (e.g. WORKSHOP_AI_CMD="").
+WORKSHOP_AI_CMD="claude"

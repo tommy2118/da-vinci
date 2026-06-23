@@ -1,0 +1,28 @@
+# frozen_string_literal: true
+
+# Acceptance test for Slice {{NUM}} — {{SLICE}} ({{MISSION}}).
+#
+# This file is what *ends* the rock drill and starts implementation. When first
+# executed against an empty codebase, it should fail on real ASSERTIONS
+# (expect(...).to ...), not on plumbing (NameError, NoMethodError on nil).
+# The right shape of red is a real assertion failure against real wiring.
+#
+# Drilled anatomy: ../ANATOMY.md (stations 3-7)
+
+require "spec_helper" # switch to "rails_helper" if this is a Rails feature spec
+
+RSpec.describe "{{MISSION}} — slice {{NUM}}: {{SLICE}}" do
+  it "TODO: pin the happy-path walk from ANATOMY.md station 6" do
+    # Sketch the test against the anatomy you drilled. Use with_adapters
+    # (defined in spec_helper) to swap fakes at the registry seam — never
+    # mock unowned types directly (§1).
+    #
+    # with_adapters(...) do |adapters|
+    #   ...
+    #   expect(...).to ...
+    # end
+
+    pending "fill in from ANATOMY.md station 6"
+    raise "remove this when the test asserts something real"
+  end
+end

@@ -1,0 +1,42 @@
+# Mission: {{NAME}}
+
+> Drilled per the workshop's `ROCK_DRILL_PROTOCOL.md`, stations 1–2.
+> Each slice in the list gets its own drill (stations 3–7) when you reach it.
+
+**Target repo:** _(blank = self-contained kata; a path = external-target mission — code and the real acceptance test land there, artifacts stay here. See PAIRING_PROTOCOL.md → External-target missions.)_
+
+<!-- github-project shape only (the unit of work lives in GitHub) — `bin/issue mission`
+     fills these. Delete if this is a kata. See GITHUB_PROJECT_SHAPE.md.
+**Epic:** `#NN`
+**GH repo:** `owner/name`
+**GH project:** `N`
+-->
+
+
+## Station 1 — Mission statement
+
+> [One sentence: behavior in → behavior out. No implementation words.]
+
+## Station 2 — Slice list
+
+Slices in shipping order. Order by **risk**, not value. Skeleton always first.
+
+| # | Slice | What it proves | New seams introduced |
+|---|-------|----------------|----------------------|
+| 1 | Skeleton | All layers wired; DI works; fakes installed; acceptance test goes red-on-plumbing → red-on-assertion → green with hard-coded path. | All — but every collaborator stubbed/faked. |
+| 2 | ... | ... | ... |
+| 3 | ... | ... | ... |
+| 4 | ... | ... | ... |
+
+## Rules for this mission
+
+- **No drilling ahead.** Each slice gets its own ~30-min rock drill when you reach it. Do not pre-design slices 2+.
+- **Each slice is shippable on its own.** Slice 1 ships as a feature-flagged endpoint with hard-coded behavior. Slice 2 makes it correct for one set of cases. Etc.
+- **Acceptance tests grow by addition, not mutation.** Each slice adds new acceptance tests. The walking skeleton's test stays green forever.
+
+## Current state
+
+- [x] Mission stated
+- [ ] Slices listed
+- [ ] Slice 1 drilled → see `SLICE_01_*/ANATOMY.md`
+- [ ] Slice 1 coded
