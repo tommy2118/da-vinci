@@ -20,10 +20,12 @@ fi
 # shellcheck source=bin/launchers/_steps.sh
 source "$WORKSHOP_ROOT/bin/launchers/_steps.sh"
 
-# Auto-start the watcher via a folderOpen task — but only if the slice path has no
+# Auto-start the watcher via a folderOpen task — but only if this session has a watcher
+# (a discovery session, WORKSHOP_WATCH=0, has no test loop) and the slice path has no
 # characters that would break the JSON we emit (paths with " or \ are rejected; the
 # printed steps below still cover that case).
-if [[ "$WORKSHOP_SLICE_DIR" != *'"'* && "$WORKSHOP_SLICE_DIR" != *'\'* && \
+if [[ "${WORKSHOP_WATCH:-1}" != "0" && \
+      "$WORKSHOP_SLICE_DIR" != *'"'* && "$WORKSHOP_SLICE_DIR" != *'\'* && \
       "$WORKSHOP_ROOT" != *'"'* && "$WORKSHOP_ROOT" != *'\'* ]]; then
   mkdir -p "$WORKSHOP_SLICE_DIR/.vscode"
   cat > "$WORKSHOP_SLICE_DIR/.vscode/tasks.json" <<JSON

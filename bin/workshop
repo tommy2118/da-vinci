@@ -73,8 +73,15 @@ if [[ -n "${WORKSHOP_TARGET_REPO:-}" && "$ai_cmd" == claude* ]]; then
 fi
 WORKSHOP_AI_CMD="$ai_cmd"
 
+# WORKSHOP_WATCH — does this session get a TDD watcher? A discovery session (scout mode,
+# opened by bin/start) has no slice and no tests yet, so the watcher would idle; omit it.
+# An explicit value (env or .workshoprc) wins, so a scout mission can force one back on.
+if [[ -z "${WORKSHOP_WATCH:-}" ]]; then
+  [[ "${WORKSHOP_MODE:-}" == "scout" ]] && WORKSHOP_WATCH=0 || WORKSHOP_WATCH=1
+fi
+
 export WORKSHOP_ROOT WORKSHOP_SLICE_DIR WORKSHOP_TARGET_DIR \
-  WORKSHOP_EDITOR_CMD WORKSHOP_TERM_CMD WORKSHOP_AI_CMD WORKSHOP_TMUX_LAYOUT
+  WORKSHOP_EDITOR_CMD WORKSHOP_TERM_CMD WORKSHOP_AI_CMD WORKSHOP_TMUX_LAYOUT WORKSHOP_WATCH
 
 LAUNCHER="${WORKSHOP_LAUNCHER:-manual}"
 LAUNCHER_BIN="$WORKSHOP_ROOT/bin/launchers/$LAUNCHER"
