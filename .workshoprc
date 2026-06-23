@@ -2,10 +2,14 @@
 # .workshoprc.local (per-machine, gitignored), then any per-slice .workshoprc — each layer
 # overrides the previous. Keep machine-specific values (launcher, content dir, editor) in
 # .workshoprc.local, not here.
+#
+# Every default below is written as "${VAR:-default}" (or "${VAR-default}" where an explicit
+# empty value is meaningful) so an exported env var or a one-off `WORKSHOP_X=y bin/workshop`
+# wins, while the later-sourced files still override unconditionally.
 
 # Active pairing mode. See PAIRING_PROTOCOL.md for definitions.
 #   navigator | coach | ping-pong | constraint | true-pair
-WORKSHOP_MODE=navigator
+WORKSHOP_MODE="${WORKSHOP_MODE:-navigator}"
 
 # Where bin/workshop hands off to arrange your workspace. Launchers live in bin/launchers/.
 #   manual  print the commands to run by hand — works in ANY editor, no deps (default)
@@ -28,25 +32,25 @@ WORKSHOP_CONTENT_DIR="${WORKSHOP_CONTENT_DIR:-}"
 # Test command invoked by the watcher on file change.
 # Defaults to Rails' bin/rspec stub (faster than bundle exec; uses bootsnap).
 # Override to `bundle exec rspec` for plain Ruby projects, or to anything else.
-WORKSHOP_TEST_CMD="bin/rspec"
+WORKSHOP_TEST_CMD="${WORKSHOP_TEST_CMD:-bin/rspec}"
 
 # Directories to watch (space-separated). The watcher recurses for *.rb and *.ru.
-WORKSHOP_WATCH_GLOB="lib spec config app"
+WORKSHOP_WATCH_GLOB="${WORKSHOP_WATCH_GLOB:-lib spec config app}"
 
 # Tmux layout used by the tmux launcher (bin/launchers/tmux). Only 'default' is implemented
 # (editor left, watcher bottom-left, AI + term windows).
-WORKSHOP_TMUX_LAYOUT=default
+WORKSHOP_TMUX_LAYOUT="${WORKSHOP_TMUX_LAYOUT:-default}"
 
 # Project type, used by bin/new-slice if it needs to scaffold.
 # Templates live in templates/<type>/. Unset = no scaffolding.
-WORKSHOP_PROJECT_TYPE=
+WORKSHOP_PROJECT_TYPE="${WORKSHOP_PROJECT_TYPE-}"
 
 # External-target mission: absolute path to the repo where code lands (set per-slice).
 # When set, the launcher opens the editor + term on that repo and gives a claude AI pane
 # --add-dir to it, while the watcher + AI keep the slice as cwd. Empty = self-contained
 # kata (everything stays in the slice). Use $HOME, never a hardcoded home, so the same
 # config works across machines. See PAIRING_PROTOCOL.md.
-WORKSHOP_TARGET_REPO=""
+WORKSHOP_TARGET_REPO="${WORKSHOP_TARGET_REPO-}"
 
 # github-project shape: the unit of work lives in GitHub Issues + a Projects v2 board.
 # Epic issue ↔ mission, Task issue ↔ slice. bin/issue reads these (flags > env > the
@@ -55,8 +59,8 @@ WORKSHOP_TARGET_REPO=""
 #   WORKSHOP_GH_REPO     owner/name slug, e.g. your-org/your-repo
 #   WORKSHOP_GH_PROJECT  Projects v2 number, e.g. 4
 #   WORKSHOP_GH_ISSUE    the Task issue this slice implements (set per-slice)
-WORKSHOP_GH_REPO=""
-WORKSHOP_GH_PROJECT=""
+WORKSHOP_GH_REPO="${WORKSHOP_GH_REPO-}"
+WORKSHOP_GH_PROJECT="${WORKSHOP_GH_PROJECT-}"
 
 # TUI editor command for the tmux launcher's 'code' pane. Honors your $EDITOR; empty when
 # $EDITOR is unset, which leaves a plain shell (handy when you edit on the host in a GUI
@@ -69,8 +73,8 @@ WORKSHOP_EDITOR="${WORKSHOP_EDITOR-${EDITOR:+$EDITOR .}}"
 # Command for the 'term' window. Empty = plain shell. For an external-target mission
 # whose target runs in Docker, set this per-slice to log into the container, e.g.
 # WORKSHOP_TERM_CMD="cd \$HOME/src/my-target-repo && make login".
-WORKSHOP_TERM_CMD=""
+WORKSHOP_TERM_CMD="${WORKSHOP_TERM_CMD-}"
 
 # AI pair partner command, launched in the right column on boot.
 # Set empty to leave the pane idle (e.g. WORKSHOP_AI_CMD="").
-WORKSHOP_AI_CMD="claude"
+WORKSHOP_AI_CMD="${WORKSHOP_AI_CMD-claude}"

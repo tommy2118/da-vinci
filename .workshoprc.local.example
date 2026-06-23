@@ -2,6 +2,10 @@
 # Sourced after the committed .workshoprc, so anything here overrides the shared defaults.
 # This is the right place for settings that differ per person or per machine — never commit
 # them to .workshoprc.
+#
+# The committed defaults are written as "${VAR:-default}", so every setting below also works
+# as a one-off on the command line — e.g. `WORKSHOP_LAUNCHER=tmux bin/workshop <slice>` — and
+# a per-slice .workshoprc (sourced last) still overrides both.
 
 # --- Launcher: how `bin/workshop <slice>` arranges your workspace ---
 # manual (default) | tmux | vscode | cursor | emacs
