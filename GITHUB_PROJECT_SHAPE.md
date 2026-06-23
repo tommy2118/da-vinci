@@ -3,7 +3,7 @@
 Some target repos keep their **unit of work in GitHub**: Epics and Task issues, labelled
 `type:` / `priority:` / `phase:`, tracked on a Projects v2 board, with commits that reference
 `(#nn)`. This document is the contract for drilling such a project from the workshop. It layers on top of
-`PAIRING_PROTOCOL.md` → External-target missions — read that first; nothing there changes.
+`PAIRING_PROTOCOL.md` → External-target missions. Read that first; nothing there changes.
 
 ## The mapping
 
@@ -27,7 +27,7 @@ expressed in GitHub's nouns.
   `ANATOMY.md` scratch.
 - **`bin/issue` is the only thing that talks to GitHub**, and it does so only through
   `Workshop::Github::Cli` (the one object that shells out to `gh`). No controller, no other
-  script, reaches for `gh` directly — that is the "no second nervous system" rule, enforced
+  script, reaches for `gh` directly: that is the "no second nervous system" rule, enforced
   by structure: `bin/issue → Workshop::Github::Gateway → Workshop::Github::Cli → gh`.
 
 ## `bin/issue` commands
@@ -50,7 +50,7 @@ same way `bin/note` infers the active mission).
 
 ## Outward writes are confirmed, not automatic
 
-`create`, `board`, and `pr` write to GitHub — they are outward-facing and visible to anyone
+`create`, `board`, and `pr` write to GitHub: they are outward-facing and visible to anyone
 watching the project. They **dry-run by default** and only execute with `--yes`. In a pairing session that
 means: propose the move, get the user's nod, *then* pass `--yes`. The board transitions that fall
 out of the loop:
@@ -59,21 +59,21 @@ out of the loop:
 - Open the slice's PR → `pr <n>` (moves the card to **In Review** on success).
 - PR merged → `board <n> "Done"`.
 
-## Workshop leads — but never contradicts the target
+## Workshop leads, but never contradicts the target
 
 The workshop's protocol governs *how we work* (drill first, skeleton first, §1–§6, the modes
 and signals). The target repo's own `AGENTS.md` / `CLAUDE.md` / ADRs govern *the code itself*.
 Defer to them where they speak, and never let the workshop's habits override:
 
-- **Test command** — use the target's (`make test`, `docker compose run … rspec …`), wired
+- **Test command**: use the target's (`make test`, `docker compose run … rspec …`), wired
   through `WORKSHOP_TEST_CMD`.
-- **Commit / PR convention** — imperative subject, body explains *why*, reference `(#nn)`.
-- **ADR invariants** — load-bearing decisions (e.g. Chronicler ≠ Subject, Pressure keyed to
+- **Commit / PR convention**: imperative subject, body explains *why*, reference `(#nn)`.
+- **ADR invariants**: load-bearing decisions (e.g. Chronicler ≠ Subject, Pressure keyed to
   Location, consent-as-events). A slice that would erode an ADR is a stop-and-surface, not a
   quiet change.
 
 If the workshop protocol and a target ADR ever genuinely conflict, that is an anatomical
-decision — surface it to the user, don't resolve it unilaterally.
+decision: surface it to the user, don't resolve it unilaterally.
 
 ## Starting a github-project mission
 
@@ -82,7 +82,7 @@ decision — surface it to the user, don't resolve it unilaterally.
 bin/issue mission 5 my-mission --target "$HOME/src/my-target-repo" \
   --repo your-org/your-repo --project 4
 
-# 2. Drill stations 1–2 in my-mission/MISSION.md (the slice list is yours — no drilling ahead).
+# 2. Drill stations 1–2 in my-mission/MISSION.md (the slice list is yours. No drilling ahead).
 
 # 3. Scaffold slice 1 from its Task issue; finish the per-slice .workshoprc (target test cmd, watch glob).
 bin/issue slice my-mission 12

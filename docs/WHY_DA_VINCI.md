@@ -45,7 +45,7 @@ That division of responsibility matters in engineering:
 | Acceptance criteria and risk | Running checks and reporting evidence |
 | Whether the result is safe to ship | Reducing mechanical effort |
 
-The tool should make the engineer’s decisions easier to inspect—not obscure them behind fluent
+The tool should make the engineer’s decisions easier to inspect. Not obscure them behind fluent
 generation.
 
 ## The body-plan test

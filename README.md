@@ -22,12 +22,12 @@ The name carries two ideas.
 
 **Leonardo studied anatomy to understand how a body works as a system.** He looked past the
 surface to the structures, joints, and relationships underneath. Da Vinci applies that lens to
-software: before refining a class or method, draw the body plan—what objects exist, what
+software: before refining a class or method, draw the body plan: what objects exist, what
 messages move between them, where substitution matters, and what each part refuses to know.
 
 **The [da Vinci surgical system](https://www.intuitive.com/en-us/patients/da-vinci-robotic-surgery/about-the-systems/)
 amplifies skilled human control.** It does not replace the surgeon. In the same way, this
-workshop treats AI as an instrument guided by an accountable engineer—not as an autonomous
+workshop treats AI as an instrument guided by an accountable engineer. Not as an autonomous
 author whose plausible output becomes the design by default.
 
 Read the fuller rationale in [Why Da Vinci?](docs/WHY_DA_VINCI.md).
@@ -102,26 +102,26 @@ pairing rhythm explicit. See the [Pairing Protocol](PAIRING_PROTOCOL.md) for the
 
 ## Three ways to use it
 
-1. **Self-contained kata** — practice one technique in isolation; code lives in the slice.
-2. **External-target mission** — rehearse here while implementation lands in an existing repo.
-3. **GitHub-project mission** — bind an Epic to a mission and Task issues to slices.
+1. **Self-contained kata**: practice one technique in isolation; code lives in the slice.
+2. **External-target mission**: rehearse here while implementation lands in an existing repo.
+3. **GitHub-project mission**: bind an Epic to a mission and Task issues to slices.
 
 All three use the same loop. They differ only in where code lands and where work is tracked.
 
 ## Documentation
 
-- [Why Da Vinci?](docs/WHY_DA_VINCI.md) — the product philosophy and limits of AI assistance
-- [Concepts](docs/CONCEPTS.md) — missions, slices, drills, pairing modes, and the two TDD loops
-- [Workflows](docs/WORKFLOWS.md) — complete walkthroughs for all three mission shapes
-- [Discipline](docs/DISCIPLINE.md) — anatomy-first OO, GOOS §1–§6, and the adapter registry
-- [Rock Drill Protocol](ROCK_DRILL_PROTOCOL.md) — the seven-station design rehearsal
-- [Pairing Protocol](PAIRING_PROTOCOL.md) — modes, signals, handoffs, and review behavior
-- [GitHub Project Shape](GITHUB_PROJECT_SHAPE.md) — the Epic/Task/Projects integration contract
-- [Conway’s Game of Life](examples/conway-game-of-life) — a finished mission to read end to end
+- [Why Da Vinci?](docs/WHY_DA_VINCI.md): the product philosophy and limits of AI assistance
+- [Concepts](docs/CONCEPTS.md): missions, slices, drills, pairing modes, and the two TDD loops
+- [Workflows](docs/WORKFLOWS.md): complete walkthroughs for all three mission shapes
+- [Discipline](docs/DISCIPLINE.md): anatomy-first OO, GOOS §1–§6, and the adapter registry
+- [Rock Drill Protocol](ROCK_DRILL_PROTOCOL.md): the seven-station design rehearsal
+- [Pairing Protocol](PAIRING_PROTOCOL.md): modes, signals, handoffs, and review behavior
+- [GitHub Project Shape](GITHUB_PROJECT_SHAPE.md): the Epic/Task/Projects integration contract
+- [Conway’s Game of Life](examples/conway-game-of-life): a finished mission to read end to end
 
 ## Configuration
 
-Copy the local configuration example, then choose a launcher and—optionally—a separate home for
+Copy the local configuration example, then choose a launcher and (optionally) a separate home for
 your private missions and engineering notes:
 
 ```bash

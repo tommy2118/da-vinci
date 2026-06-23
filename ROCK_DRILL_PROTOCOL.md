@@ -1,6 +1,6 @@
 # The Rock-Drill Protocol
 
-A repeatable, time-boxed rehearsal you run on every slice **before any code is written**. The military rock drill is a sand-table walkthrough where each operator traces their movements out loud before stepping off. This is the software analogue: trace the message flow, name the joints, declare what each object refuses to know — *then* code.
+A repeatable, time-boxed rehearsal you run on every slice **before any code is written**. The military rock drill is a sand-table walkthrough where each operator traces their movements out loud before stepping off. This is the software analogue: trace the message flow, name the joints, declare what each object refuses to know. *Then* code.
 
 **Total time: ~30 minutes per slice.** If it takes 90, the slice is too big.
 
@@ -9,8 +9,8 @@ A repeatable, time-boxed rehearsal you run on every slice **before any code is w
 ## When to run it
 
 - Before starting any non-trivial slice of work.
-- After slicing a larger feature — drill slice 1 first; subsequent slices each get their own drill.
-- When you feel the urge to "just start coding to see what shape it takes." That urge is the signal — drill instead.
+- After slicing a larger feature: drill slice 1 first; subsequent slices each get their own drill.
+- When you feel the urge to "just start coding to see what shape it takes." That urge is the signal. Drill instead.
 
 ## When not to run it
 
@@ -18,6 +18,18 @@ A repeatable, time-boxed rehearsal you run on every slice **before any code is w
 - Mechanical changes following a pattern already established elsewhere.
 
 If unsure whether something is cellular or anatomical, label it up. Drill it.
+
+---
+
+## Drilling with the LLM
+
+The LLM is a pair here too. Not just once code begins. Lean on it during the drill. Ask it to draw station 3 from your description, to pressure-test a refusal list, to name bypass risks you missed, to play the skeptic on your walk. A drill run with a good pair beats a drill skipped because you didn't feel ready to run it alone.
+
+Drilling solo is the skill you're working toward, not the price of admission. Most people don't have the reps yet to trace joints and refusals cold. That's expected. It's fine. Use the pair to get the reps. The reps are how you earn the solo drill.
+
+One rule keeps this honest: **understand everything that lands in the drill, whether you wrote it or the LLM did.** Every box. Every arrow. Every refusal. Every risk. The whole point is to put the anatomy in *your* hands before you type. An LLM that hands you a body plan you can't explain has defeated the drill, however clean the diagram looks. So interrogate it. If you can't say why a collaborator exists, what a joint lets you substitute, or what an object refuses to know, you're not done. Ask until you can, or push back until it's right.
+
+Remember where the LLM is strong and where it isn't. It's excellent at DNA: drafting the ASCII, filling in a plausible method, listing candidates. It's mediocre at the body plan: knowing which objects should exist and what they must refuse. That judgment stays yours. Let it propose. You ratify. And you ratify only what you understand.
 
 ---
 
@@ -33,9 +45,9 @@ If unsure whether something is cellular or anatomical, label it up. Drill it.
 | 6 | **Walk**           | 5m   | Trace happy path message-by-message; then one fail  | Can the design run end to end?                    | `## Walk-through`        |
 | 7 | **Bypass audit**   | 3m   | Plausible ways a future change adds a second path around the design | Where could the anatomy be bypassed?    | `## Bypass risks`        |
 
-The drill operator thinks in **station numbers** (procedural — "I'm on station 4 now"). The artifact uses **semantic section names** (reader-first — "show me the Joints"). Same content, two vocabularies for two audiences.
+The drill operator thinks in **station numbers** (procedural: "I'm on station 4 now"). The artifact uses **semantic section names** (reader-first: "show me the Joints"). Same content, two vocabularies for two audiences.
 
-**Then — and only then — write the acceptance test, and code begins.**
+**Then, and only then, write the acceptance test, and code begins.**
 
 ---
 
@@ -55,7 +67,7 @@ If you can't say it in one sentence, the slice is too big. Go back to station 2.
 
 List 3–5 slices in shipping order. Slice 1 is always the **walking skeleton**: end-to-end through every layer with hard-coded values. Subsequent slices each add one capability.
 
-Order by *risk*, not by *value*. The slice you're least sure about goes first. Wiring is usually the riskiest — that's why the skeleton comes first.
+Order by *risk*, not by *value*. The slice you're least sure about goes first. Wiring is usually the riskiest: that's why the skeleton comes first.
 
 Don't drill ahead. Each slice gets its own drill at its own time.
 
@@ -83,11 +95,11 @@ For every arrow in the drawing, fill a row:
 | Arrow | Owned? | Real default | Test double | Notes |
 |-------|--------|--------------|-------------|-------|
 
-- **Owned?** — Yes (your code, you can change it) or No (vendor, stdlib, framework internals — must wrap, never mock directly per §1).
-- **Real default** — what production wires. Constructor default. `Processor.new` must work with no args.
-- **Test double** — Real > Fake > Stub > Mock (§5). Prefer fakes living in `spec/support/fakes/`.
+- **Owned?**: Yes (your code, you can change it) or No (vendor, stdlib, framework internals that you must wrap, never mock directly per §1).
+- **Real default**: what production wires. Constructor default. `Processor.new` must work with no args.
+- **Test double**: Real > Fake > Stub > Mock (§5). Prefer fakes living in `spec/support/fakes/`.
 
-Time-injected globals (`clock`, `id_gen`, `logger`, `config`, `job_queue`) get rows too — they're collaborators (§6).
+Time-injected globals (`clock`, `id_gen`, `logger`, `config`, `job_queue`) get rows too: they're collaborators (§6).
 
 ### 5. Refusal lists (5 min)
 
@@ -112,7 +124,7 @@ Trace the happy path **out loud**, message by message. Each step references only
 
 If a step requires knowledge that isn't in your drawing, **you found a missing collaborator**. Add it. Redraw station 3.
 
-Then trace **one failure mode** the same way. You don't have to enumerate all failures yet — one is enough to prove the body handles negative space.
+Then trace **one failure mode** the same way. You don't have to enumerate all failures yet. One is enough to prove the body handles negative space.
 
 ### 7. Bypass audit (3 min)
 
@@ -123,7 +135,7 @@ Where could a future change bypass the anatomy? Where might a tired dev "just re
 
 Mitigations can be: enforcement (cops), structure (value object instead of AR), convention (acceptance tests use `with_adapters`), or accepted risk ("live with it, monitor"). An empty audit is dishonest.
 
-This is the anatomy-defending-itself step. Most catastrophic failures aren't "we forgot the pattern" — they're "we followed the pattern in one place and bypassed it somewhere else." Audit for second paths around the design.
+This is the anatomy-defending-itself step. Most catastrophic failures aren't "we forgot the pattern." They're "we followed the pattern in one place and bypassed it somewhere else." Audit for second paths around the design.
 
 ---
 
@@ -162,14 +174,14 @@ in a shared language that builds the artifacts directly.
 
 ## Eight checks before the drill is "done"
 
-1. **One-screen test** — anatomy diagram fits one terminal screen.
-2. **One-sentence test** — mission is one sentence, behavior-in/behavior-out.
-3. **Refusal-list completeness** — every box has ≥2 refusal items.
-4. **Joint completeness** — every arrow has a real default AND a test double.
-5. **Walk test** — every walk step uses only objects/messages from the drawing.
-6. **Red-shape test** — acceptance test fails on assertions, not plumbing.
-7. **Bypass-audit honesty** — ≥3 named risks with mitigations or accepted-risk labels.
-8. **Timer test** — total elapsed ~30 min.
+1. **One-screen test**: anatomy diagram fits one terminal screen.
+2. **One-sentence test**: mission is one sentence, behavior-in/behavior-out.
+3. **Refusal-list completeness**: every box has ≥2 refusal items.
+4. **Joint completeness**: every arrow has a real default AND a test double.
+5. **Walk test**: every walk step uses only objects/messages from the drawing.
+6. **Red-shape test**: acceptance test fails on assertions, not plumbing.
+7. **Bypass-audit honesty**: ≥3 named risks with mitigations or accepted-risk labels.
+8. **Timer test**: total elapsed ~30 min.
 
 If any check fails, you skipped a station. Go back.
 
@@ -181,4 +193,4 @@ If any check fails, you skipped a station. Go back.
 - It is **not** a one-time exercise. It's a habit. Every slice. Every time.
 - It is **not** a substitute for coding. It's the thing you do *before* coding so the coding goes fast and clean.
 
-The point of the drill is not to produce perfect drills. It is to make anatomical thinking *automatic* — so that by the time you're typing, the joints, refusal lists, and message flow are already in your hands. The drill is the practice; production code is the performance.
+The point of the drill is not to produce perfect drills. It is to make anatomical thinking *automatic*: so that by the time you're typing, the joints, refusal lists, and message flow are already in your hands. The drill is the practice; production code is the performance.

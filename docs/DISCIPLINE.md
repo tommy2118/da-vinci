@@ -1,15 +1,15 @@
-# Discipline — the craft the workshop drills
+# Discipline: the craft the workshop drills
 
 The workshop is *structure* around a *discipline*. This document is the discipline: the
 object-design frame, the testing rules, and the standards every drill and pairing session is
 practicing. [CONCEPTS.md](CONCEPTS.md) and [WORKFLOWS.md](WORKFLOWS.md) reference the rules by
-number (§1–§6) and name (Sandi's rules, the registry seam) — this is where they're defined.
+number (§1–§6) and name (Sandi's rules, the registry seam). This is where they're defined.
 
 If you keep a personal `~/.claude/CLAUDE.md`, it still applies on top of this; where the two
 agree, this document is the shared baseline a colleague can rely on.
 
 Further reading, in order of relevance: *Growing Object-Oriented Software, Guided by Tests*
-(Freeman & Pryce — "GOOS"), *Practical Object-Oriented Design in Ruby* (Sandi Metz — "POODR"),
+(Freeman & Pryce, "GOOS"), *Practical Object-Oriented Design in Ruby* (Sandi Metz, "POODR"),
 *Refactoring* and *Test-Driven Development by Example* (Kent Beck).
 
 ---
@@ -25,7 +25,7 @@ Software has **anatomy** and **cellular detail**.
   surgery. It answers *where does this part belong and what does it connect to?*
 
 Both matter; they're different levels of work. The trap is that **you can write excellent
-cellular code for the wrong creature** — clean, tested, idiomatic, and still belonging to a
+cellular code for the wrong creature**: clean, tested, idiomatic, and still belonging to a
 bad anatomy. Good code inside the wrong relationships still produces a system that's hard to
 change.
 
@@ -43,7 +43,7 @@ this system?"**
 ### Refusal is design
 
 A good object has a job *and some principled ignorance*. When you propose an object, name what
-it **refuses to know** — that refusal list is half the anatomy. An object without a refusal
+it **refuses to know**. That refusal list is half the anatomy. An object without a refusal
 list isn't designed yet; it's only named. (This is why the rock drill's station 5 is a refusal
 list per box.)
 
@@ -51,12 +51,12 @@ list per box.)
 
 Before any non-trivial change, label its level:
 
-- **Cellular move** — changes implementation without changing message flow (rename a local,
+- **Cellular move**: changes implementation without changing message flow (rename a local,
   simplify a conditional, extract a private method called from one place).
-- **Local anatomical move** — changes object boundaries, collaborators, ownership of a
+- **Local anatomical move**: changes object boundaries, collaborators, ownership of a
   decision, or what an object refuses to know (extract a class, inject a collaborator,
   introduce a value object).
-- **Architectural move** — changes a load-bearing seam (persistence model, service boundary,
+- **Architectural move**: changes a load-bearing seam (persistence model, service boundary,
   auth model, integration strategy, a long-lived public API).
 
 Don't smuggle anatomical moves inside cellular work. "While I was here I just cleaned it up" is
@@ -64,7 +64,7 @@ the phrase that usually precedes a quiet change to ownership or boundaries. When
 label a change deserves, label it up and surface it.
 
 > **Prove architecture. Draw design. Iterate implementation.** Architecture has no best
-> practices, only tradeoffs you choose deliberately — so architectural moves get surfaced, not
+> practices, only tradeoffs you choose deliberately, so architectural moves get surfaced, not
 > made unilaterally.
 
 ---
@@ -78,12 +78,12 @@ label a change deserves, label it up and surface it.
 3. Pass no more than 4 parameters (a hash of options counts as 1).
 4. Controllers instantiate one object.
 
-These are **training constraints**, not universal laws. The value isn't that 101 lines is bad
-— it's that the limits force design pressure to surface *early*, while it's still cheap to
+These are **training constraints**, not universal laws. The value isn't that 101 lines is bad.
+It's that the limits force design pressure to surface *early*, while it's still cheap to
 respond. Treat them as the pressure rules of a drill: when a rule pushes back, that push is
 information about the design.
 
-Break them when you must — but know that you're breaking them. When the 4-parameter rule
+Break them when you must, but know that you're breaking them. When the 4-parameter rule
 pushes back, the move is usually not to break it but to group related collaborators into a
 small struct (`Adapters = Data.define(:payments, :inventory, :repo, :queue)`). Group by what
 changes together.
@@ -101,16 +101,16 @@ changes together.
   need substitutability, you don't need it.
 - **Duck typing over inheritance.** Substitutability comes from a shared *message protocol*,
   not a shared parent class.
-- **Tell, don't ask** — push behavior to where the data lives.
-- **Law of Demeter** — talk only to immediate collaborators (`a.b.c.d` is a violation).
+- **Tell, don't ask**: push behavior to where the data lives.
+- **Law of Demeter**: talk only to immediate collaborators (`a.b.c.d` is a violation).
 - **DRY**, but duplication is cheaper than the *wrong* abstraction.
-- **YAGNI** — solve the problem, not the hypothetical.
+- **YAGNI**: solve the problem, not the hypothetical.
 
 ### When not to extract
 
 This discipline is extraction-heavy by nature, which makes object *explosion* the easy
-over-correction. A new object is justified when it creates a **better joint** — a seam where
-substitution or refusal now lives — not merely when it makes a method shorter. If an
+over-correction. A new object is justified when it creates a **better joint**, a seam where
+substitution or refusal now lives, not merely when it makes a method shorter. If an
 extraction doesn't give something a clearer job and a refusal list, you added an element
 without adding design: Beck's *fewest elements* pulling against Sandi's *small units*. A
 premature object is just the wrong abstraction with a constructor, and those are more
@@ -126,13 +126,13 @@ The discipline beneath them:
 
 - The **outer (acceptance) loop** pins *behavior* against the real stack and stays red until
   the slice actually works. It's what catches a mock that lies.
-- The **inner (unit) loop** drives *design* — fast, one test per object, mocks allowed
+- The **inner (unit) loop** drives *design*: fast, one test per object, mocks allowed
   *because the outer loop catches their lies*.
 
-Writing tests *after* the code is not TDD — it's certification of whatever you built, smells
+Writing tests *after* the code is not TDD. It's certification of whatever you built, smells
 and all. The design conversation is gone. The cycle is the conversation: **Red** proposes an
 anatomy, **Green** is the dumbest thing that passes, **Refactor** is where design happens. The
-shape that survives Refactor is the anatomy the tests demanded — don't skip from Red to "the
+shape that survives Refactor is the anatomy the tests demanded. Don't skip from Red to "the
 good design," that silences the conversation.
 
 Mocks are a **speed** tool, not a **correctness** tool. The outer loop is what proves
@@ -146,7 +146,7 @@ GOOS works, but its known failure modes all show up when teams run *only* the in
 These six rules keep the practice honest. Each is the anatomical move applied at a specific
 surface.
 
-### §1 — Only mock types you own
+### §1: Only mock types you own
 
 The boundary rule; makes the boundary visible.
 
@@ -158,12 +158,12 @@ The boundary rule; makes the boundary visible.
 The deeper rule: **mocks should pin contracts, not implementations.** A contract changes
 rarely; an implementation changes often. If renaming one method breaks 15 specs, those specs
 reached in and named the implementation. Write mocks that say "given this input, return this
-output, by this protocol" — not "I expect exactly this internal call sequence."
+output, by this protocol," not "I expect exactly this internal call sequence."
 
 **Mock smells:** mocking the object under test; `allow(...).to receive(...)` chains 3+ deep;
 tests pass but the feature is broken in dev; refactoring requires changing 5+ mocks.
 
-### §2 — Run the outer loop (the part teams skip)
+### §2: Run the outer loop (the part teams skip)
 
 Makes the substitution mechanism visible.
 
@@ -178,7 +178,7 @@ Makes the substitution mechanism visible.
 test. That's an inner-loop technique at the wrong layer. The acceptance test fakes at the
 **registry seam** (see [The adapter registry](#the-adapter-registry)), not at the SDK.
 
-### §3 — Contract tests for adapters
+### §3: Contract tests for adapters
 
 Makes the contract visible. For every adapter wrapping an external system:
 
@@ -193,7 +193,7 @@ Makes the contract visible. For every adapter wrapping an external system:
 The fake is what your inner specs use; the real is what production wires; the contract holds
 them together. Two limbs, one socket.
 
-### §4 — Inject collaborators, don't reach for them
+### §4: Inject collaborators, don't reach for them
 
 Makes the joints visible. Every collaborator is a constructor or method parameter **with a
 real default**, so production calls `Thing.new` with no args and works, while tests pass fakes.
@@ -206,16 +206,16 @@ end
 
 The rule: if a test would need `allow_any_instance_of`, `stub_const`, `travel_to`, or
 `Timecop` inside domain code, the collaborator should have been injected. Those tools are
-smells, not solutions. No DI container required — defaults stay real.
+smells, not solutions. No DI container required. Defaults stay real.
 
-### §5 — Test doubles: Real > Fake > Stub > Mock
+### §5: Test doubles: Real > Fake > Stub > Mock
 
 Makes the test-double choice visible. Prefer, in order:
 
-1. **Real object** — if it's fast and owned, use it.
-2. **Fake** — an in-memory working implementation, shared across tests.
-3. **Stub** — a canned return value for one call.
-4. **Mock** — a verified interaction (last resort).
+1. **Real object**: if it's fast and owned, use it.
+2. **Fake**: an in-memory working implementation, shared across tests.
+3. **Stub**: a canned return value for one call.
+4. **Mock**: a verified interaction (last resort).
 
 **Fakes are first-class code**, living in `spec/support/fakes/` as `Fake<Thing>`, implementing
 the real interface, with their own contract spec (§3), reused across the suite. Write a fake
@@ -223,9 +223,9 @@ when you'd otherwise mock the same collaborator in 5+ specs, or use 2+ `allow(..
 one spec. Mocks are acceptable for verifying a side effect with no observable state ("did we
 publish to SNS?"), or pinning behavior at a boundary you can't cheaply fake.
 
-### §6 — Ban implicit globals in domain code
+### §6: Ban implicit globals in domain code
 
-Makes the nerves visible. These are dependencies, not language features — inject them:
+Makes the nerves visible. These are dependencies, not language features. Inject them:
 
 | Global | Inject as | Test default |
 |--------|-----------|--------------|
@@ -251,7 +251,7 @@ application asks for its adapters, instead of constructing vendor objects inline
 # production wiring
 Adapters.register(:payments, StripePaymentGateway.new)
 
-# acceptance test — swap fakes for the whole feature, at the boundary you own
+# acceptance test: swap fakes for the whole feature, at the boundary you own
 with_adapters(payments: FakePaymentGateway.new) do
   post "/orders", params: cart
   expect(response).to have_http_status(:created)
@@ -259,7 +259,7 @@ end
 ```
 
 `with_adapters(...)` (a test helper defined in your `spec_helper`) overrides the registry for
-the block, then restores it. The application code never sees a mock — it asks the registry and
+the block, then restores it. The application code never sees a mock, it asks the registry and
 gets a fake that honors the same contract (§3). This is what keeps the acceptance test honest
 *and* free of SDK-level stubbing.
 
@@ -268,11 +268,11 @@ gets a fake that honors the same contract (§3). This is what keeps the acceptan
 The same Stripe charge, three ways:
 
 ```ruby
-# BAD — mock the vendor SDK directly. Brittle (breaks when Stripe's shape changes) and it
+# BAD: mock the vendor SDK directly. Brittle (breaks when Stripe's shape changes) and it
 # pins the SDK's implementation, not your contract. Violates §1.
 allow(Stripe::Charge).to receive(:create).and_return(double(id: "ch_1"))
 
-# BETTER — wrap the vendor in an adapter you own; mock *that* in unit tests (§1).
+# BETTER: wrap the vendor in an adapter you own; mock *that* in unit tests (§1).
 class StripePaymentGateway
   def charge(amount_cents:, token:)            # the contract your app depends on
     res = Stripe::Charge.create(amount: amount_cents, source: token)
@@ -281,7 +281,7 @@ class StripePaymentGateway
 end
 allow(payments).to receive(:charge).and_return(Payment.new(id: "ch_1", status: :captured))
 
-# BEST — in acceptance, fake at the registry seam so the *real* app wiring runs (§2),
+# BEST: in acceptance, fake at the registry seam so the *real* app wiring runs (§2),
 # and hold the fake to the real adapter's contract with shared specs (§3).
 with_adapters(payments: FakePaymentGateway.new) do
   post "/orders", params: cart
@@ -304,7 +304,7 @@ RSpec.shared_examples "a payment gateway" do
   end
 end
 
-RSpec.describe StripePaymentGateway do   # the real adapter — integration (VCR / sandbox)
+RSpec.describe StripePaymentGateway do   # the real adapter: integration (VCR / sandbox)
   it_behaves_like "a payment gateway"
 end
 
@@ -313,14 +313,14 @@ RSpec.describe FakePaymentGateway do     # the in-memory fake your specs use
 end
 ```
 
-If the fake and the real adapter ever drift, that shared example goes red — §3 doing its job.
+If the fake and the real adapter ever drift, that shared example goes red. §3 doing its job.
 
 ---
 
 ## Rails notes
 
 This discipline targets a Rails codebase, so be explicit about where Rails conventions stay
-Railsy — overcorrecting is its own smell:
+Railsy. Overcorrecting is its own smell:
 
 - **Controllers instantiate one object** (§4 above / Sandi rule 4), but **views, components,
   and form objects** may use framework objects freely. That's presentation, not domain
@@ -329,7 +329,7 @@ Railsy — overcorrecting is its own smell:
   them by default.** When a model starts coordinating other objects, jobs, or external calls,
   that orchestration wants its own service object.
 - **`travel_to` / `Timecop` are fine in request and system specs** exercising the real Rails
-  stack — but **not in domain specs**, where you inject a `clock:` (§6).
+  stack, but **not in domain specs**, where you inject a `clock:` (§6).
 - **The registry seam is for *external* edges** (payments, mail, SMS, object storage), not for
   wrapping every Rails collaborator. Wrapping ActiveRecord in a repository is a real choice
   with a cost; make it when you need the seam, not reflexively.
@@ -338,11 +338,11 @@ Railsy — overcorrecting is its own smell:
 
 ## Reviewing with this discipline
 
-The discipline is only as good as the review behavior it produces. Six questions, in order —
-the first two decide how hard to look:
+The discipline is only as good as the review behavior it produces. Six questions, in order.
+The first two decide how hard to look:
 
 1. **Can I draw the design?** If not, ask for the anatomy before reviewing the cells.
-2. **What level changed — cellular, local anatomy, or architecture?** Cellular gets a light
+2. **What level changed: cellular, local anatomy, or architecture?** Cellular gets a light
    touch; anatomical and architectural moves get scrutiny, and should have been surfaced, not
    smuggled into a "refactor."
 3. **What does each new object refuse to know?** No refusal list means it isn't designed yet.
@@ -370,7 +370,7 @@ are the deeper reference when one of these questions turns something up.
 | Long parameter list | > 4 params | introduce a parameter object |
 | Refused bequest | subclass ignores inherited methods | prefer composition |
 
-## Test smells — listen to the tests
+## Test smells: listen to the tests
 
 A test that's hard to write is the anatomy diagnosing itself.
 
@@ -386,22 +386,22 @@ A test that's hard to write is the anatomy diagnosing itself.
 | changing one method breaks 15 mock-heavy specs | mocks froze implementation | redesign via the failures, don't just update mocks |
 | passes but the feature is broken in dev | mocks lied; no outer-loop coverage | add an acceptance test with real wiring (§2) |
 
-**Honest exceptions:** a payment-flow test is scary to change because payments are scary —
-that's the domain, not the design. Some test pain is tooling pain (RSpec quirks, factory
+**Honest exceptions:** a payment-flow test is scary to change because payments are scary.
+That's the domain, not the design. Some test pain is tooling pain (RSpec quirks, factory
 setup), not anatomical pain. Spend a few minutes deciding which it is. But the default
 assumption is: the pain is signal.
 
 ---
 
-## Working in existing codebases — how much to apply
+## Working in existing codebases: how much to apply
 
 **Apply the discipline to the object or seam you're changing, not the whole file.** For a
-normal PR, bring the code you touch up to standard and leave untouched legacy alone — don't let
+normal PR, bring the code you touch up to standard and leave untouched legacy alone. Don't let
 this document become a rewrite mandate. The regime is asymmetric:
 
 - **New code** follows these rules from line one.
 - **Touched code** improves a little when you touch it (Boy Scout rule: one method extracted,
-  one global injected — not a rewrite).
+  one global injected, not a rewrite).
 - **Untouched working code** stays as-is. It works; a defensive rewrite costs more than leaving
   it until someone needs to change it.
 
@@ -410,9 +410,9 @@ this document become a rewrite mandate. The regime is asymmetric:
 
 Two techniques worth knowing by name:
 
-- **Sprout class** — when legacy code needs new behavior, extract a new clean class and call it
+- **Sprout class**: when legacy code needs new behavior, extract a new clean class and call it
   from the legacy code in one tested place, rather than growing the legacy class.
-- **Characterization tests** — before changing legacy code deeply, pin its current behavior
+- **Characterization tests**: before changing legacy code deeply, pin its current behavior
   (bugs included) with tests, then refactor green.
 
 Prefer **consistency over local perfection**: two ways to do one thing is worse than one
