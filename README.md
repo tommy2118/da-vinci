@@ -35,6 +35,8 @@ Read the fuller rationale in [Why Da Vinci?](docs/WHY_DA_VINCI.md).
 ## The operating loop
 
 ```text
+Problem in hand
+  → Discover with the LLM until the mission is clear
 Mission
   → Slice the work by risk
   → Rehearse the body plan
@@ -48,6 +50,7 @@ Da Vinci makes each transition concrete:
 
 | Stage | Artifact or tool | What it protects |
 |---|---|---|
+| Start from a problem | `bin/start` + `scout` discovery mode | Investigation before you commit to a mission |
 | Define the outcome | `MISSION.md` | Scope and shipping order |
 | Rehearse the design | `ANATOMY.md` + the seven-station rock drill | Object boundaries, joints, and refusals |
 | Prove the body walks | Acceptance test + `bin/drill-check` | Real behavior and honest wiring |
@@ -105,6 +108,7 @@ feedback the AI should provide.
 
 | Mode | Working agreement |
 |---|---|
+| `scout` | Discovery, before there's a mission: the AI researches and answers questions; it writes no code |
 | `navigator` | The AI prescribes precise moves; you type every line |
 | `coach` | You write; the AI asks questions and names design smells |
 | `ping-pong` | You write a failing test; the AI writes the smallest pass; you refactor |
@@ -155,7 +159,7 @@ overrides, and each slice may override both.
 ## Repository map
 
 ```text
-bin/            Mission, slice, drill, note, watcher, launcher, and GitHub commands
+bin/            Start (discovery), mission, slice, drill, note, watcher, launcher, and GitHub commands
 docs/           Product philosophy, concepts, discipline, and workflows
 templates/      Scaffolds for missions, slices, tests, and notes
 examples/       Fully worked practice missions

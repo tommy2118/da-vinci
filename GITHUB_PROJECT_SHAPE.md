@@ -18,6 +18,13 @@ Some target repos keep their **unit of work in GitHub**: Epics and Task issues, 
 This is the same Levels table from the global `CLAUDE.md` (Epic → decompose → Tasks),
 expressed in GitHub's nouns.
 
+**`bin/start` vs. `bin/issue mission`.** `bin/start --issue <url>` seeds a *discovery* brief
+from any GitHub issue (it records the pointer and the issue body in Station 0), but it does not
+bind an Epic to a mission. For the github-project shape, scaffold from the Epic with `bin/issue
+mission <epic-n>`, which fills the `Epic:` / `GH repo:` / `GH project:` fields. Reach for
+`bin/start` when you're still shaping the problem; reach for `bin/issue mission` when the Epic
+already is the mission.
+
 ## Where the wiring lives
 
 - **`MISSION.md`** (the Epic) carries three backtick-quoted fields: `Epic:`, `GH repo:`,

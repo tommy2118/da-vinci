@@ -31,17 +31,24 @@ a design, and run the loop.
 ## The unit hierarchy: mission → slice → drill → code
 
 ```
-Mission        a body of work (days)        -> MISSION.md   (stations 1–2)
-  └ Slice      a 1–2 day shippable unit     -> a SLICE_NN_* directory
-      └ Drill  a ~30-min design rehearsal   -> ANATOMY.md   (stations 3–7)
-          └ Code  the implementation         -> production code + tests
+Problem          a problem-shaped thing       -> bin/start, scout mode (station 0)
+  └ Mission      a body of work (days)        -> MISSION.md   (stations 1–2)
+      └ Slice    a 1–2 day shippable unit     -> a SLICE_NN_* directory
+          └ Drill  a ~30-min design rehearsal -> ANATOMY.md   (stations 3–7)
+              └ Code  the implementation       -> production code + tests
 ```
 
 ### Mission
 
 A body of work that decomposes into slices. Its `MISSION.md` holds the first two rock-drill
 stations: a **one-sentence mission statement** (behavior in → behavior out) and an **ordered
-slice list** (3–5 slices, ordered by *risk*). You scaffold one with `bin/new-rep <name>`.
+slice list** (3–5 slices, ordered by *risk*).
+
+Often you start with only a problem-shaped thing, not a stated mission. `bin/start <name>` is
+step zero: it scaffolds a discovery-ready `MISSION.md` (a **Station 0** brief with the problem
+and any existing repo or tracker item) and opens the workspace in `scout` mode so the LLM can
+research before you commit to a mission. See [Station 0 in the rock drill](../ROCK_DRILL_PROTOCOL.md).
+When you already know the mission, `bin/new-rep <name>` scaffolds it directly.
 
 ### Slice
 
@@ -110,11 +117,12 @@ is a complete, drilled instance. Read it alongside the protocol.
 ## Pairing modes: who writes what
 
 The AI's behavior is governed by a **mode**, declared as `WORKSHOP_MODE` in `.workshoprc`.
-You switch mid-session by typing `mode <name>`. The five modes
+You switch mid-session by typing `mode <name>`. The six modes
 ([full definitions](../PAIRING_PROTOCOL.md#modes)):
 
 | Mode | Who writes production code | Use it to… |
 |------|----------------------------|------------|
+| **scout** | Nobody yet; Claude researches, investigates, and answers questions, but writes no code | discover a problem before there's a mission to drill (`bin/start` boots into it) |
 | **navigator** | You type every keystroke; Claude prescribes precise moves | learn a pattern from scratch; build the typing-and-judgment muscle |
 | **coach** | You; Claude never writes code, only asks Socratic questions and names smells | sharpen judgment when you can already write the code |
 | **ping-pong** | Alternating: you write a red test → Claude writes the dumb pass → you refactor | drill Beck's Red→Green→Refactor rhythm on small katas |
@@ -218,5 +226,10 @@ when you start a mission or touch a target, you consult the notes first.
    the **signals** in play, and **where you left off**. Then waits.
 3. You drive with **signals**. The watcher gives you a red/green loop on every save. You
    commit per slice.
+
+A **discovery** session is the same machine one step earlier: `bin/start <name>` opens the
+workbench on the *mission* in `scout` mode, so the AI reads `MISSION.md`'s Station 0 instead of
+a slice's `ANATOMY.md` and researches the problem with you. There's no red/green loop yet, since
+there's no slice to test. Once the mission is clear, you drop into the slice flow above.
 
 That's the whole machine. The walkthroughs put it in motion.

@@ -12,7 +12,7 @@ These files live at the workshop root (the directory holding this `CLAUDE.md`), 
 3. `ROCK_DRILL_PROTOCOL.md` — the seven-station rehearsal run before any non-trivial slice.
 4. `.workshoprc` — global defaults for the workshop (and `.workshoprc.local`, per-machine overrides, if present).
 5. If the current working directory contains a `.workshoprc`, source it as overrides on top of the global.
-6. If the current working directory contains an `ANATOMY.md`, read it to know where the in-flight slice stands.
+6. If the current working directory contains an `ANATOMY.md`, read it to know where the in-flight slice stands. If instead you're in a mission directory in `scout` mode (a discovery session opened by `bin/start`: a `MISSION.md` but no slice yet), read `MISSION.md`'s Station 0 to know what problem you're researching.
 7. If a mission is active, skim `notes/INDEX.md` (and `bin/note find --mission <name>` / `--target <repo>`) for durable findings, decisions, gotchas, and lessons bearing on it. See `PAIRING_PROTOCOL.md` → Engineering notes. (Notes and missions live under `WORKSHOP_CONTENT_DIR`, which defaults to the workshop root.)
 8. If the active mission or slice sets `WORKSHOP_GH_REPO` (a github-project mission), read `GITHUB_PROJECT_SHAPE.md` and skim the active Epic/Task via `bin/issue show $WORKSHOP_GH_ISSUE`.
 
@@ -21,7 +21,7 @@ These files live at the workshop root (the directory holding this `CLAUDE.md`), 
 In your first reply of the session, state:
 - The active **mode** (from `WORKSHOP_MODE`, possibly overridden per-slice).
 - The **signal vocabulary** that applies (universal + any mode-specific).
-- **Where we left off**: the verification checkboxes in ANATOMY.md, last commit message, current red/green state.
+- **Where we left off**: the verification checkboxes in ANATOMY.md, last commit message, current red/green state. In a `scout` discovery session, it's the Station 0 problem and the findings recorded so far.
 
 Then wait for a signal. Do not act until one is issued.
 

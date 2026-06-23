@@ -34,6 +34,12 @@ We'll follow the bundled **Conway's Game of Life** example. It's finished and fu
 so you can open every artifact this walkthrough describes, and run the last two steps against
 it yourself. When you build your *own* kata the commands are identical; only the names change.
 
+> **Step zero, when you don't yet have a mission.** If you're starting from a problem-shaped
+> thing rather than a known mission, run `bin/start <name>` first. It scaffolds a discovery
+> brief (Station 0) from the problem and any repo or tracker item, then opens the workspace in
+> `scout` mode so the LLM researches with you until you can state the mission. This walkthrough
+> assumes the mission is already clear, so it starts at `bin/new-rep`.
+
 ### Step 1: Scaffold the mission
 
 ```bash
