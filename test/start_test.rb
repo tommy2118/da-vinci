@@ -46,10 +46,44 @@ class StartTest < Minitest::Test
     in_content_dir do |content|
       _out, err, status = run_start(content, "tracked",
                                     "--problem", "Fix the thing",
-                                    "--issue", "https://github.com/acme/widgets/issues/42", "--no-launch")
+                                    "--tracker", "https://app.clickup.com/t/abc123", "--no-launch")
 
       assert status.success?, err
-      assert_includes read(content, "tracked", "MISSION.md"), "issues/42"
+      assert_includes read(content, "tracked", "MISSION.md"), "abc123"
+    end
+  end
+
+  def test_seeds_discovery_from_a_github_issue
+    in_content_dir do |content|
+      Dir.mktmpdir("fakebin") do |fakebin|
+        write_fake_gh(fakebin)
+
+        _out, err, status = run_start(content, "webhooks",
+                                      "--problem", "Emit webhooks",
+                                      "--issue", "https://github.com/acme/store/issues/77",
+                                      "--no-launch", extra_path: fakebin)
+
+        assert status.success?, err
+        mission = read(content, "webhooks", "MISSION.md")
+        assert_includes mission, "Webhooks on order events", "issue title should seed the brief"
+        assert_includes mission, "webhook fires", "issue body should seed the brief"
+      end
+    end
+  end
+
+  def test_falls_back_to_a_pointer_when_the_issue_fetch_fails
+    in_content_dir do |content|
+      Dir.mktmpdir("fakebin") do |fakebin|
+        write_failing_gh(fakebin)
+
+        _out, err, status = run_start(content, "degraded",
+                                      "--problem", "X",
+                                      "--issue", "https://github.com/acme/store/issues/77",
+                                      "--no-launch", extra_path: fakebin)
+
+        assert status.success?, "a failed fetch must degrade gracefully, not abort: #{err}"
+        assert_includes read(content, "degraded", "MISSION.md"), "issues/77", "pointer is still recorded"
+      end
     end
   end
 
@@ -77,8 +111,30 @@ class StartTest < Minitest::Test
     Dir.mktmpdir("start-content") { |dir| yield dir }
   end
 
-  def run_start(content_dir, *args)
-    Open3.capture3({ "WORKSHOP_CONTENT_DIR" => content_dir }, File.join(ROOT, "bin", "start"), *args)
+  def run_start(content_dir, *args, extra_path: nil)
+    env = { "WORKSHOP_CONTENT_DIR" => content_dir }
+    env["PATH"] = "#{extra_path}:#{ENV['PATH']}" if extra_path
+    Open3.capture3(env, File.join(ROOT, "bin", "start"), *args)
+  end
+
+  # A gh stand-in on PATH so bin/issue (and the real Workshop::Github::Cli) run end to end
+  # without the network. The real authenticated gh is on PATH, so tests must always shadow it.
+  def write_fake_gh(dir)
+    json = '{"number":77,"title":"Webhooks on order events",' \
+           '"body":"Given an order is placed\nThen a webhook fires",' \
+           '"labels":[],"url":"https://github.com/acme/store/issues/77","state":"OPEN"}'
+    write_gh(dir, "if [ \"$1\" = \"issue\" ] && [ \"$2\" = \"view\" ]; then\n" \
+                  "  printf '%s' '#{json}'\n  exit 0\nfi\nexit 1\n")
+  end
+
+  def write_failing_gh(dir)
+    write_gh(dir, "exit 1\n")
+  end
+
+  def write_gh(dir, body)
+    path = File.join(dir, "gh")
+    File.write(path, "#!/usr/bin/env bash\n#{body}")
+    File.chmod(0o755, path)
   end
 
   def read(*parts)

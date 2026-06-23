@@ -91,6 +91,25 @@ SOURCES=""
 [[ -n "$TRACKER" ]] && SOURCES+="- Tracker: $TRACKER"$'\n'
 [[ -n "$SOURCES" ]] || SOURCES="_None yet._"
 
+# If the issue is a GitHub reference, seed the discovery brief with its title and body.
+# Fetch only through bin/issue (the one owned GitHub seam — no second nervous system).
+# Any failure (gh missing, unauthenticated, no such issue) degrades to a pointer only.
+ISSUE_BRIEF=""
+gh_repo=""; gh_num=""
+if [[ "$ISSUE" =~ ^https?://github\.com/([^/]+/[^/]+)/issues/([0-9]+) ]]; then
+  gh_repo="${BASH_REMATCH[1]}"; gh_num="${BASH_REMATCH[2]}"
+elif [[ "$ISSUE" =~ ^([^/[:space:]]+/[^/#[:space:]]+)#([0-9]+)$ ]]; then
+  gh_repo="${BASH_REMATCH[1]}"; gh_num="${BASH_REMATCH[2]}"
+fi
+if [[ -n "$gh_num" ]]; then
+  if brief="$("$WORKSHOP_ROOT/bin/issue" show "$gh_num" --repo "$gh_repo" 2>/dev/null)"; then
+    ISSUE_BRIEF="**From the tracker item:**"$'\n\n'"$(printf '%s\n' "$brief" | sed 's/^/> /')"$'\n'
+    echo "Seeded discovery from $gh_repo#$gh_num."
+  else
+    echo "note: couldn't fetch $ISSUE; recording it as a pointer only." >&2
+  fi
+fi
+
 mkdir -p "$DEST"
 
 tmpl="$(cat "$TMPL")"
@@ -98,6 +117,7 @@ tmpl="${tmpl//\{\{NAME\}\}/$NAME}"
 tmpl="${tmpl//\{\{PROBLEM\}\}/$PROBLEM}"
 tmpl="${tmpl//\{\{TARGET_REPO\}\}/$REPO}"
 tmpl="${tmpl//\{\{SOURCES\}\}/$SOURCES}"
+tmpl="${tmpl//\{\{ISSUE_BRIEF\}\}/$ISSUE_BRIEF}"
 printf '%s\n' "$tmpl" > "$DEST/MISSION.md"
 
 # Mission-level .workshoprc carries the discovery posture. bin/workshop sources it from the

@@ -51,6 +51,7 @@ tmpl="${tmpl//\{\{NAME\}\}/$NAME}"
 tmpl="${tmpl//\{\{PROBLEM\}\}/$PROBLEM}"
 tmpl="${tmpl//\{\{TARGET_REPO\}\}/$TARGET_REPO}"
 tmpl="${tmpl//\{\{SOURCES\}\}/$SOURCES}"
+tmpl="${tmpl//\{\{ISSUE_BRIEF\}\}/}"
 printf '%s\n' "$tmpl" > "$DEST/MISSION.md"
 
 cat <<EOF
