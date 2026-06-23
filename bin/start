@@ -31,6 +31,7 @@ REPO=""
 ISSUE=""
 TRACKER=""
 LAUNCH=1
+MATRIX=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -39,6 +40,7 @@ while [[ $# -gt 0 ]]; do
     --issue)   ISSUE="${2:-}"; shift 2 ;;
     --tracker) TRACKER="${2:-}"; shift 2 ;;
     --no-launch) LAUNCH=0; shift ;;
+    --matrix) MATRIX=1; shift ;;
     -h|--help) sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     --*) echo "unknown flag: $1" >&2; exit 64 ;;
     *)
@@ -67,6 +69,26 @@ if [[ -t 0 ]]; then
   if [[ -z "$ISSUE$TRACKER" ]]; then
     printf 'Tracker item (GitHub issue URL/#, ClickUp or Linear link; blank = none): ' >&2
     read -r ISSUE
+  fi
+fi
+
+# Easter egg: the question itself takes the red pill. Recognized whether typed at the prompt
+# or passed via --problem. matrix mode hands the whole process to the LLM, nose to tail. It
+# suspends the human-in-the-loop discipline on purpose; that is the joke and the warning.
+if [[ "$PROBLEM" =~ ^[[:space:]]*[Ww]hat[[:space:]]+is[[:space:]]+[Tt]he[[:space:]]+[Mm]atrix\??[[:space:]]*$ ]]; then
+  cat <<'EOF'
+
+  "Unfortunately, no one can be told what the Matrix is.
+   You have to see it for yourself."
+
+  Red pill. I will run the whole process nose to tail: discover, drill, test, build,
+  commit, and hand you back a tested repo. Follow the white rabbit.
+EOF
+  MATRIX=1
+  if [[ -t 0 ]]; then
+    printf 'What should I build, nose to tail? ' >&2
+    read -r real_problem
+    [[ -n "$real_problem" ]] && PROBLEM="$real_problem"
   fi
 fi
 
@@ -141,12 +163,14 @@ tmpl="${tmpl//\{\{SOURCES\}\}/$SOURCES}"
 tmpl="${tmpl//\{\{ISSUE_BRIEF\}\}/$ISSUE_BRIEF}"
 printf '%s\n' "$tmpl" > "$DEST/MISSION.md"
 
-# Mission-level .workshoprc carries the discovery posture. bin/workshop sources it from the
-# mission cwd, and the launched LLM reads WORKSHOP_MODE itself to enter scout mode.
+# Mission-level .workshoprc carries the session posture. bin/workshop sources it from the
+# mission cwd, and the launched LLM reads WORKSHOP_MODE itself to enter the mode. scout is
+# discovery; matrix is the autonomous easter egg (see PAIRING_PROTOCOL.md).
+MODE="scout"; [[ "$MATRIX" -eq 1 ]] && MODE="matrix"
 {
-  echo "# Discovery posture for this mission (written by bin/start). Sourced by bin/workshop;"
-  echo "# the launched LLM reads WORKSHOP_MODE to enter scout mode. See PAIRING_PROTOCOL.md."
-  echo "WORKSHOP_MODE=scout"
+  echo "# Session posture for this mission (written by bin/start). Sourced by bin/workshop;"
+  echo "# the launched LLM reads WORKSHOP_MODE to enter ${MODE} mode. See PAIRING_PROTOCOL.md."
+  echo "WORKSHOP_MODE=${MODE}"
   [[ -n "$REPO" ]] && echo "WORKSHOP_TARGET_REPO=\"$REPO\""
 } > "$DEST/.workshoprc"
 
@@ -155,13 +179,21 @@ SHAPE="self-contained kata"
 
 echo "Created $DEST/  (shape: $SHAPE)"
 echo "  MISSION.md     problem + sources in Station 0; stations 1-2 blank"
-echo "  .workshoprc    WORKSHOP_MODE=scout"
+echo "  .workshoprc    WORKSHOP_MODE=${MODE}"
 echo
 
-if [[ "$LAUNCH" -eq 1 ]]; then
+if [[ "$MATRIX" -eq 1 ]]; then
+  if [[ "$LAUNCH" -eq 1 ]]; then
+    echo "Wake up, Neo. Entering matrix mode: the LLM runs the whole process autonomously,"
+    echo "from discovery to a committed, tested slice. There is no spoon. Review what it commits."
+    exec "$WORKSHOP_ROOT/bin/workshop" "$DEST"
+  else
+    echo "Matrix mode armed. Run: bin/workshop $NAME    # the LLM then runs it nose to tail."
+  fi
+elif [[ "$LAUNCH" -eq 1 ]]; then
   echo "Opening the discovery workspace in scout mode (the LLM researches; it writes no code)."
-  echo "When discovery is done — you can state Station 1 in one sentence and list the slices —"
-  echo "drill stations 1-2 in MISSION.md, then: bin/new-slice $NAME <slice-name>"
+  echo "When discovery is done (you can state Station 1 and list the slices), drill stations 1-2"
+  echo "in MISSION.md, then: bin/new-slice $NAME <slice-name>"
   exec "$WORKSHOP_ROOT/bin/workshop" "$DEST"
 else
   cat <<EOF

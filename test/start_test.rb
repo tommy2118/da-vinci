@@ -87,6 +87,30 @@ class StartTest < Minitest::Test
     end
   end
 
+  # Easter egg: a hidden "vibe code" autopilot. The red pill enters matrix mode, where the
+  # LLM is told to run the whole process nose to tail. We can only test the wiring (the mode
+  # and the trigger), not the autonomous run itself.
+  def test_red_pill_flag_enters_matrix_mode
+    in_content_dir do |content|
+      _out, err, status = run_start(content, "neo",
+                                    "--problem", "build a URL shortener", "--matrix", "--no-launch")
+
+      assert status.success?, err
+      assert_includes read(content, "neo", ".workshoprc"), "WORKSHOP_MODE=matrix"
+    end
+  end
+
+  def test_the_question_itself_wakes_the_easter_egg
+    in_content_dir do |content|
+      out, err, status = run_start(content, "trinity",
+                                   "--problem", "What is the Matrix?", "--no-launch")
+
+      assert status.success?, err
+      assert_match(/red pill|white rabbit|no one can be told/i, "#{out}#{err}")
+      assert_includes read(content, "trinity", ".workshoprc"), "WORKSHOP_MODE=matrix"
+    end
+  end
+
   def test_seeds_discovery_from_a_github_issue
     in_content_dir do |content|
       Dir.mktmpdir("fakebin") do |fakebin|

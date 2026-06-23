@@ -99,6 +99,17 @@ Discovery mode, before there's a mission to drill. `bin/start` boots into it. Th
 - **Tone**: curious and exact. Investigate, don't implement. Name what you don't know.
 - **When to use**: step zero. You have a problem-shaped thing and need to understand it before you can state Station 1 in one sentence and list the slices in Station 2. Leave scout the moment you can. Switch to a coding mode and start the drill.
 
+### Matrix (`WORKSHOP_MODE=matrix`), the easter egg
+
+Hidden autopilot. `bin/start` enters it when you answer the problem prompt with "What is the Matrix?" (or pass `--matrix`). This is the one mode where the LLM plays both roles and runs the whole process nose to tail, without waiting for signals.
+
+This mode **suspends the human-in-the-loop discipline on purpose.** It is the inverse of everything else in this workshop: you will not understand what it builds while it builds it, which is exactly what Station 0 tells you never to accept. That is the joke and the warning. It's for a throwaway spike or a vibe-coded prototype, never for code you have to own.
+
+- **Claude may**: run the entire loop autonomously. Discover the problem (Station 0), state the mission and slice list (stations 1-2), then for each slice drill stations 3-7, write the acceptance test, and run red → green → refactor until it passes, committing per slice. Run the test command itself, create files, and scaffold slices with `bin/new-slice`. Keep going until the slices are shipped or it is genuinely blocked.
+- **Claude must still**: keep each acceptance test honest (real assertions, §1–§6 at the seams), commit per slice with a real message, and stop and report if it cannot make a slice green. Speed is never an excuse to fake green.
+- **Tone**: terse narration. Say which slice you're on and what's red or green. Theme it lightly if you like ("there is no spoon" on a green run); keep it short.
+- **When to use**: never for work you must stand behind. A demo, a spike, a "what would this even look like" prototype. Take the blue pill (any other mode) for real work.
+
 ---
 
 ## Universal signals
@@ -196,4 +207,4 @@ Delete the section/row. If a `.workshoprc` references a removed mode, Claude sho
 
 ## When you're unsure which mode you're in
 
-Read `.workshoprc` in the current working directory (and the global one at the workshop root, plus `.workshoprc.local` if present). The valid modes are `navigator`, `coach`, `ping-pong`, `constraint`, `true-pair`, and `scout` (discovery, see Modes above). If `WORKSHOP_MODE` is unset or unknown, default to `navigator` and announce that you defaulted.
+Read `.workshoprc` in the current working directory (and the global one at the workshop root, plus `.workshoprc.local` if present). The valid modes are `navigator`, `coach`, `ping-pong`, `constraint`, `true-pair`, `scout` (discovery, see Modes above), and `matrix` (the hidden autopilot easter egg). If `WORKSHOP_MODE` is unset or unknown, default to `navigator` and announce that you defaulted.
