@@ -84,29 +84,50 @@ fi
 
 [[ -n "$PROBLEM" ]] || PROBLEM="[State the problem-shaped thing you're here to solve.]"
 
-# Build the Sources block from whatever pointers we were given.
+# Classify a tracker reference into a normalized, labeled pointer line. Recognizes GitHub,
+# ClickUp, and Linear by URL or short ref; anything else is recorded verbatim. Sets
+# gh_repo/gh_num when it's a GitHub issue, so the seeding step below can fetch it. The raw
+# ref stays in the line so the pointer remains clickable.
 SOURCES=""
-[[ -n "$REPO" ]]    && SOURCES+="- Repo: \`$REPO\`"$'\n'
-[[ -n "$ISSUE" ]]   && SOURCES+="- Issue: $ISSUE"$'\n'
-[[ -n "$TRACKER" ]] && SOURCES+="- Tracker: $TRACKER"$'\n'
+[[ -n "$REPO" ]] && SOURCES+="- Repo: \`$REPO\`"$'\n'
+
+gh_repo=""; gh_num=""
+add_tracker() {
+  local ref="$1"; [[ -n "$ref" ]] || return 0
+  local label id=""
+  if [[ "$ref" =~ ^https?://github\.com/([^/]+/[^/]+)/issues/([0-9]+) ]] \
+     || [[ "$ref" =~ ^([^/[:space:]]+/[^/#[:space:]]+)#([0-9]+)$ ]]; then
+    label="GitHub issue"; id="${BASH_REMATCH[1]}#${BASH_REMATCH[2]}"
+    gh_repo="${BASH_REMATCH[1]}"; gh_num="${BASH_REMATCH[2]}"
+  elif [[ "$ref" =~ clickup\.com/(.*/)?t/([A-Za-z0-9]+) ]]; then
+    label="ClickUp task"; id="${BASH_REMATCH[2]}"
+  elif [[ "$ref" =~ linear\.app/[^/]+/issue/([A-Za-z]+-[0-9]+) ]]; then
+    label="Linear issue"; id="${BASH_REMATCH[1]}"
+  elif [[ "$ref" =~ ^([A-Za-z]+-[0-9]+)$ ]]; then
+    label="Linear issue"; id="${BASH_REMATCH[1]}"
+  else
+    label="Tracker"
+  fi
+  if [[ -n "$id" ]]; then
+    SOURCES+="- ${label}: \`${id}\` (${ref})"$'\n'
+  else
+    SOURCES+="- ${label}: ${ref}"$'\n'
+  fi
+}
+add_tracker "$ISSUE"
+add_tracker "$TRACKER"
 [[ -n "$SOURCES" ]] || SOURCES="_None yet._"
 
-# If the issue is a GitHub reference, seed the discovery brief with its title and body.
+# If a tracker reference was a GitHub issue, seed the discovery brief with its title and body.
 # Fetch only through bin/issue (the one owned GitHub seam — no second nervous system).
 # Any failure (gh missing, unauthenticated, no such issue) degrades to a pointer only.
 ISSUE_BRIEF=""
-gh_repo=""; gh_num=""
-if [[ "$ISSUE" =~ ^https?://github\.com/([^/]+/[^/]+)/issues/([0-9]+) ]]; then
-  gh_repo="${BASH_REMATCH[1]}"; gh_num="${BASH_REMATCH[2]}"
-elif [[ "$ISSUE" =~ ^([^/[:space:]]+/[^/#[:space:]]+)#([0-9]+)$ ]]; then
-  gh_repo="${BASH_REMATCH[1]}"; gh_num="${BASH_REMATCH[2]}"
-fi
 if [[ -n "$gh_num" ]]; then
   if brief="$("$WORKSHOP_ROOT/bin/issue" show "$gh_num" --repo "$gh_repo" 2>/dev/null)"; then
     ISSUE_BRIEF="**From the tracker item:**"$'\n\n'"$(printf '%s\n' "$brief" | sed 's/^/> /')"$'\n'
     echo "Seeded discovery from $gh_repo#$gh_num."
   else
-    echo "note: couldn't fetch $ISSUE; recording it as a pointer only." >&2
+    echo "note: couldn't fetch the GitHub issue; recording it as a pointer only." >&2
   fi
 fi
 

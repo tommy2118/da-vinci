@@ -53,6 +53,40 @@ class StartTest < Minitest::Test
     end
   end
 
+  def test_normalizes_a_clickup_pointer
+    in_content_dir do |content|
+      _out, err, status = run_start(content, "cu", "--problem", "x",
+                                    "--tracker", "https://app.clickup.com/t/abc123", "--no-launch")
+
+      assert status.success?, err
+      mission = read(content, "cu", "MISSION.md")
+      assert_includes mission, "ClickUp"
+      assert_includes mission, "abc123"
+    end
+  end
+
+  def test_normalizes_a_linear_pointer
+    in_content_dir do |content|
+      _out, err, status = run_start(content, "ln", "--problem", "x",
+                                    "--tracker", "https://linear.app/acme/issue/ENG-123/add-webhooks", "--no-launch")
+
+      assert status.success?, err
+      mission = read(content, "ln", "MISSION.md")
+      assert_includes mission, "Linear"
+      assert_includes mission, "ENG-123"
+    end
+  end
+
+  def test_records_an_unrecognized_tracker_as_a_generic_pointer
+    in_content_dir do |content|
+      _out, err, status = run_start(content, "other", "--problem", "x",
+                                    "--tracker", "https://example.test/board/9", "--no-launch")
+
+      assert status.success?, err
+      assert_includes read(content, "other", "MISSION.md"), "https://example.test/board/9"
+    end
+  end
+
   def test_seeds_discovery_from_a_github_issue
     in_content_dir do |content|
       Dir.mktmpdir("fakebin") do |fakebin|
