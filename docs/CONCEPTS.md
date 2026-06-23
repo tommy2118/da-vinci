@@ -1,13 +1,13 @@
-# Concepts — the workshop mental model
+# Concepts — the Da Vinci mental model
 
 Read this once. It defines every word the rest of the docs use. When you want to *do*
 something, jump to [WORKFLOWS.md](WORKFLOWS.md) for the three end-to-end walkthroughs.
 
 ---
 
-## What the workshop is for
+## What Da Vinci is for
 
-The workshop is a **practice space** for two disciplines that are hard to learn by reading:
+Da Vinci is a **practice space** for two disciplines that are hard to learn by reading:
 
 - **Anatomy-first object design** — deciding what objects exist, what messages move between
   them, where the joints are, and what each object *refuses to know*, **before** writing the
@@ -23,8 +23,8 @@ output. A finished kata is a side effect of a good rep.
 The discipline itself — the anatomy frame, the §1–§6 rules, Sandi's rules, the registry seam —
 is defined in **[DISCIPLINE.md](DISCIPLINE.md)**; this guide and the walkthroughs reference it
 by number and name. (Your global `~/.claude/CLAUDE.md`, if you keep one, applies on top.) The
-workshop is the *structure* around that discipline: how you scope work, rehearse a design, and
-run the loop.
+workshop is the *structure* Da Vinci puts around that discipline: how you scope work, rehearse
+a design, and run the loop.
 
 ---
 
