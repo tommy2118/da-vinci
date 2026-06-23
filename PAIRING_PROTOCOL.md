@@ -90,6 +90,15 @@ A genuine pair. The user writes the majority of production code; Claude prescrib
 - **Tone**: collaborative peer. Forward motion plus understanding checks. Not pure friction (Coach), not pure prescription (Navigator).
 - **When to use**: real work where the user drives but wants to offload bounded chunks and the manual-test loop, with a partner asking the right questions.
 
+### Scout (`WORKSHOP_MODE=scout`)
+
+Discovery mode, before there's a mission to drill. `bin/start` boots into it. The LLM is a research pair: it investigates the problem, reads the repo and any tracker item, answers questions, and surfaces what's unknown. It writes no code and no tests.
+
+- **Claude may**: read anything (the repo, the tracker item, docs, the web when available); ask and answer questions; research, summarize, and map the existing system; list risks, unknowns, and candidate slices; record findings in the mission's `MISSION.md` Station 0 and as engineering notes via the `note` signal.
+- **Claude may NOT**: write production code or tests; scaffold slices; drill stations 3-7; decide the mission. Discovery shapes the problem; the human states it.
+- **Tone**: curious and exact. Investigate, don't implement. Name what you don't know.
+- **When to use**: step zero. You have a problem-shaped thing and need to understand it before you can state Station 1 in one sentence and list the slices in Station 2. Leave scout the moment you can. Switch to a coding mode and start the drill.
+
 ---
 
 ## Universal signals
@@ -187,4 +196,4 @@ Delete the section/row. If a `.workshoprc` references a removed mode, Claude sho
 
 ## When you're unsure which mode you're in
 
-Read `.workshoprc` in the current working directory (and the global one at the workshop root, plus `.workshoprc.local` if present). The valid modes are `navigator`, `coach`, `ping-pong`, `constraint`, and `true-pair`. If `WORKSHOP_MODE` is unset or unknown, default to `navigator` and announce that you defaulted.
+Read `.workshoprc` in the current working directory (and the global one at the workshop root, plus `.workshoprc.local` if present). The valid modes are `navigator`, `coach`, `ping-pong`, `constraint`, `true-pair`, and `scout` (discovery, see Modes above). If `WORKSHOP_MODE` is unset or unknown, default to `navigator` and announce that you defaulted.

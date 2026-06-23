@@ -1,17 +1,34 @@
 # Mission: {{NAME}}
 
-> Drilled per the workshop's `ROCK_DRILL_PROTOCOL.md`, stations 1–2.
-> Each slice in the list gets its own drill (stations 3–7) when you reach it.
+> Drilled per the workshop's `ROCK_DRILL_PROTOCOL.md`. Station 0 (discovery) shapes the
+> problem; stations 1–2 state the mission and slice list. Each slice in the list gets its
+> own drill (stations 3–7) when you reach it.
 
-**Target repo:** _(blank = self-contained kata; a path = external-target mission — code and the real acceptance test land there, artifacts stay here. See PAIRING_PROTOCOL.md → External-target missions.)_
+**Target repo:** {{TARGET_REPO}}
+<!-- blank = self-contained kata. A path = external-target mission: code and the real
+     acceptance test land there, artifacts stay here. See PAIRING_PROTOCOL.md. -->
 
-<!-- github-project shape only (the unit of work lives in GitHub) — `bin/issue mission`
+<!-- github-project shape only (the unit of work lives in GitHub). `bin/issue mission`
      fills these. Delete if this is a kata. See GITHUB_PROJECT_SHAPE.md.
 **Epic:** `#NN`
 **GH repo:** `owner/name`
 **GH project:** `N`
 -->
 
+
+## Station 0 — Discovery
+
+> The problem-shaped thing you're here to solve, before it's a mission. Pair with the LLM
+> in `scout` mode to research, investigate, and answer questions. See
+> `ROCK_DRILL_PROTOCOL.md` → Station 0. Discovery is done when you can state Station 1 in
+> one sentence and list the slices in Station 2.
+
+**Problem:** {{PROBLEM}}
+
+**Sources:** {{SOURCES}}
+
+**Findings / open questions:**
+-
 
 ## Station 1 — Mission statement
 
@@ -36,7 +53,8 @@ Slices in shipping order. Order by **risk**, not value. Skeleton always first.
 
 ## Current state
 
-- [x] Mission stated
-- [ ] Slices listed
+- [ ] Discovery done (Station 0)
+- [ ] Mission stated (Station 1)
+- [ ] Slices listed (Station 2)
 - [ ] Slice 1 drilled → see `SLICE_01_*/ANATOMY.md`
 - [ ] Slice 1 coded

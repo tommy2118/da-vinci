@@ -37,7 +37,21 @@ if [[ ! -f "$TMPL" ]]; then
 fi
 
 mkdir -p "$DEST"
-sed "s/{{NAME}}/$NAME/g" "$TMPL" > "$DEST/MISSION.md"
+
+# Fill the template. new-rep is the "I already know the mission" path, so it leaves the
+# Station 0 discovery fields as prompts rather than filled-in findings. Use bash parameter
+# expansion (not sed) so values with slashes never need escaping. bin/start fills these
+# with the real problem and sources.
+PROBLEM="[State the problem-shaped thing, or run \`bin/start $NAME\` for guided discovery.]"
+TARGET_REPO=""
+SOURCES="_None yet._"
+
+tmpl="$(cat "$TMPL")"
+tmpl="${tmpl//\{\{NAME\}\}/$NAME}"
+tmpl="${tmpl//\{\{PROBLEM\}\}/$PROBLEM}"
+tmpl="${tmpl//\{\{TARGET_REPO\}\}/$TARGET_REPO}"
+tmpl="${tmpl//\{\{SOURCES\}\}/$SOURCES}"
+printf '%s\n' "$tmpl" > "$DEST/MISSION.md"
 
 cat <<EOF
 Created $DEST/

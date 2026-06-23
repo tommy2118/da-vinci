@@ -33,6 +33,18 @@ Remember where the LLM is strong and where it isn't. It's excellent at DNA: draf
 
 ---
 
+## Station 0: Discovery (before the drill)
+
+Sometimes you don't have a mission yet. You have a problem-shaped thing: a vague ask, a ticket, a repo someone handed you. The seven stations assume you can already state the mission in one sentence. Station 0 is how you get there.
+
+Run it with `bin/start <name>`. It scaffolds a discovery-ready mission from the problem, plus any existing repo or tracker item, and opens the workspace with the LLM in `scout` mode. In scout mode the LLM researches, investigates, and answers questions. It writes no code. Use it to read the repo, read the ticket, map what already exists, and name what you don't know. Record findings in the mission's Station 0 section and as engineering notes.
+
+Station 0 is not timed. Discovery takes as long as the unknowns take. It is done when you can do two things: state Station 1 in one sentence, and list the slices in Station 2. The moment you can, leave scout, switch to a coding mode, and start the drill at station 1.
+
+One rule carries over from the drill: understand everything the LLM hands you. Research you can't explain is not discovery. It's a summary you will redo the moment the design depends on it.
+
+---
+
 ## The seven stations
 
 | # | Station            | Time | Output                                              | Question                                          | Lands in `ANATOMY.md` as |

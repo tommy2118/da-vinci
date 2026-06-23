@@ -8,7 +8,7 @@
 # wins, while the later-sourced files still override unconditionally.
 
 # Active pairing mode. See PAIRING_PROTOCOL.md for definitions.
-#   navigator | coach | ping-pong | constraint | true-pair
+#   navigator | coach | ping-pong | constraint | true-pair | scout (discovery; bin/start boots into it)
 WORKSHOP_MODE="${WORKSHOP_MODE:-navigator}"
 
 # Where bin/workshop hands off to arrange your workspace. Launchers live in bin/launchers/.

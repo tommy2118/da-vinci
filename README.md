@@ -73,12 +73,26 @@ the three things every slice needs: an editor, a test watcher, and an AI pair. T
 
 ## Start your own mission
 
+Step zero, when you have a problem-shaped thing but not yet a mission. One command scaffolds
+a discovery-ready mission and opens the workspace with the LLM in `scout` mode, so it can
+research and investigate before you drill:
+
 ```bash
-bin/new-rep order-claims
+bin/start order-claims
+```
+
+`bin/start` asks for the problem, an existing repo (if any), and a tracker item (GitHub issue,
+ClickUp, Linear). It infers the mission shape and boots discovery. When you can state the
+mission in one sentence and list the slices, you drill and build:
+
+```bash
 bin/new-slice order-claims walking-skeleton
 bin/drill-check order-claims/SLICE_01_walking-skeleton
 bin/workshop order-claims/SLICE_01_walking-skeleton
 ```
+
+If you already know the mission and want to skip discovery, `bin/new-rep order-claims`
+scaffolds the mission directly.
 
 Slice 1 is always a walking skeleton: the smallest end-to-end path through the real stack,
 using hard-coded behavior where necessary, that proves the system is wired before domain logic

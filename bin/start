@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+# Usage: start <name> [--problem "..."] [--repo PATH] [--issue REF] [--tracker URL] [--no-launch]
+#
+# Step zero. You have a problem-shaped thing and want to use Da Vinci to solve it.
+# This is the lowest-friction entry: it scaffolds a discovery-ready mission from the
+# problem (plus any existing repo or tracker item), then hands off to bin/workshop in
+# `scout` mode so the LLM can research and investigate before you drill stations 1-2.
+#
+# Flags are optional; with a TTY, start prompts for whatever you didn't pass. It writes:
+#   <content-dir>/<name>/MISSION.md    problem + sources in Station 0, stations 1-2 blank
+#   <content-dir>/<name>/.workshoprc   WORKSHOP_MODE=scout (+ target repo if external)
+# then execs `bin/workshop <name>` unless --no-launch.
+#
+# Mission shape is inferred: a --repo makes it an external-target mission; a tracker item
+# is recorded as a pointer (bin/start does not fetch it yet — that is a later slice).
+
+set -euo pipefail
+
+WORKSHOP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Config layering: committed defaults, then per-machine local, then resolve the content dir.
+# shellcheck disable=SC1090,SC1091
+[[ -f "$WORKSHOP_ROOT/.workshoprc" ]] && source "$WORKSHOP_ROOT/.workshoprc"
+# shellcheck disable=SC1090,SC1091
+[[ -f "$WORKSHOP_ROOT/.workshoprc.local" ]] && source "$WORKSHOP_ROOT/.workshoprc.local"
+WORKSHOP_CONTENT_DIR="${WORKSHOP_CONTENT_DIR:-$WORKSHOP_ROOT}"
+
+NAME=""
+PROBLEM=""
+REPO=""
+ISSUE=""
+TRACKER=""
+LAUNCH=1
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --problem) PROBLEM="${2:-}"; shift 2 ;;
+    --repo)    REPO="${2:-}"; shift 2 ;;
+    --issue)   ISSUE="${2:-}"; shift 2 ;;
+    --tracker) TRACKER="${2:-}"; shift 2 ;;
+    --no-launch) LAUNCH=0; shift ;;
+    -h|--help) sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    --*) echo "unknown flag: $1" >&2; exit 64 ;;
+    *)
+      if [[ -z "$NAME" ]]; then NAME="$1"; shift
+      else echo "unexpected argument: $1" >&2; exit 64; fi
+      ;;
+  esac
+done
+
+if [[ -z "$NAME" ]]; then
+  echo "usage: start <name> [--problem ...] [--repo PATH] [--issue REF] [--tracker URL] [--no-launch]" >&2
+  exit 64
+fi
+
+# Interactive prompts fill what the flags didn't, but only when there's a terminal to ask.
+# In a pipe (tests, CI) the missing values just stay empty.
+if [[ -t 0 ]]; then
+  if [[ -z "$PROBLEM" ]]; then
+    printf 'What problem are you here to solve? ' >&2
+    read -r PROBLEM
+  fi
+  if [[ -z "$REPO" ]]; then
+    printf 'Existing repo path (blank = self-contained kata): ' >&2
+    read -r REPO
+  fi
+  if [[ -z "$ISSUE$TRACKER" ]]; then
+    printf 'Tracker item (GitHub issue URL/#, ClickUp or Linear link; blank = none): ' >&2
+    read -r ISSUE
+  fi
+fi
+
+DEST="$WORKSHOP_CONTENT_DIR/$NAME"
+if [[ -e "$DEST" ]]; then
+  echo "already exists: $DEST" >&2
+  exit 1
+fi
+
+TMPL="$WORKSHOP_ROOT/templates/mission/MISSION.md.tmpl"
+if [[ ! -f "$TMPL" ]]; then
+  echo "missing template: $TMPL" >&2
+  exit 1
+fi
+
+[[ -n "$PROBLEM" ]] || PROBLEM="[State the problem-shaped thing you're here to solve.]"
+
+# Build the Sources block from whatever pointers we were given.
+SOURCES=""
+[[ -n "$REPO" ]]    && SOURCES+="- Repo: \`$REPO\`"$'\n'
+[[ -n "$ISSUE" ]]   && SOURCES+="- Issue: $ISSUE"$'\n'
+[[ -n "$TRACKER" ]] && SOURCES+="- Tracker: $TRACKER"$'\n'
+[[ -n "$SOURCES" ]] || SOURCES="_None yet._"
+
+mkdir -p "$DEST"
+
+tmpl="$(cat "$TMPL")"
+tmpl="${tmpl//\{\{NAME\}\}/$NAME}"
+tmpl="${tmpl//\{\{PROBLEM\}\}/$PROBLEM}"
+tmpl="${tmpl//\{\{TARGET_REPO\}\}/$REPO}"
+tmpl="${tmpl//\{\{SOURCES\}\}/$SOURCES}"
+printf '%s\n' "$tmpl" > "$DEST/MISSION.md"
+
+# Mission-level .workshoprc carries the discovery posture. bin/workshop sources it from the
+# mission cwd, and the launched LLM reads WORKSHOP_MODE itself to enter scout mode.
+{
+  echo "# Discovery posture for this mission (written by bin/start). Sourced by bin/workshop;"
+  echo "# the launched LLM reads WORKSHOP_MODE to enter scout mode. See PAIRING_PROTOCOL.md."
+  echo "WORKSHOP_MODE=scout"
+  [[ -n "$REPO" ]] && echo "WORKSHOP_TARGET_REPO=\"$REPO\""
+} > "$DEST/.workshoprc"
+
+SHAPE="self-contained kata"
+[[ -n "$REPO" ]] && SHAPE="external-target ($REPO)"
+
+echo "Created $DEST/  (shape: $SHAPE)"
+echo "  MISSION.md     problem + sources in Station 0; stations 1-2 blank"
+echo "  .workshoprc    WORKSHOP_MODE=scout"
+echo
+
+if [[ "$LAUNCH" -eq 1 ]]; then
+  echo "Opening the discovery workspace in scout mode (the LLM researches; it writes no code)."
+  echo "When discovery is done — you can state Station 1 in one sentence and list the slices —"
+  echo "drill stations 1-2 in MISSION.md, then: bin/new-slice $NAME <slice-name>"
+  exec "$WORKSHOP_ROOT/bin/workshop" "$DEST"
+else
+  cat <<EOF
+Next:
+  1. bin/workshop $NAME        # opens the editor + LLM in scout mode for discovery
+  2. Research the problem with the LLM until you can state Station 1 and list Station 2.
+  3. Drill stations 1-2 in MISSION.md, then: bin/new-slice $NAME <slice-name>
+EOF
+fi
